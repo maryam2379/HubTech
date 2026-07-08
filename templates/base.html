@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HuTech{% endblock %}</title>
+   <style>
+        :root {
+            --sky-blue: #38bdf8;
+            --night-blue: #0f172a;
+            --violet: #8b5cf6;
+            --white: #ffffff;
+            --black: #0a0a0a;
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(139, 92, 246, 0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            min-height: 100vh;
+            color: var(--white);
+            padding-bottom: 100px;
+            line-height: 1.6;
+        }
+
+        /* ========== BOTTOM NAVIGATION ========== */
+        .bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 600px;
+            height: 70px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 20px;
+            z-index: 1000;
+            box-shadow: 
+                0 8px 32px rgba(139, 92, 246, 0.15),
+                0 0 0 1px rgba(56, 189, 248, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .bottom-nav:hover {
+            box-shadow: 
+                0 12px 40px rgba(139, 92, 246, 0.25),
+                0 0 0 1px rgba(56, 189, 248, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            min-width: 60px;
+        }
+
+        .nav-item:hover {
+            color: var(--sky-blue);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .nav-item.active {
+            color: var(--sky-blue);
+            background: rgba(56, 189, 248, 0.15);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--sky-blue);
+            box-shadow: 0 0 8px var(--sky-blue);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active .nav-icon {
+            transform: translateY(-2px);
+            filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--sky-blue), var(--violet));
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .nav-logo:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 6px 25px rgba(139, 92, 246, 0.6);
+        }
+
+        .nav-logo svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        @media (max-width: 480px) {
+            .bottom-nav {
+                height: 60px;
+                border-radius: 30px;
+                padding: 0 12px;
+                bottom: 12px;
+                width: calc(100% - 24px);
+            }
+
+            .nav-item {
+                min-width: 50px;
+                padding: 6px 10px;
+            }
+
+            .nav-label {
+                display: none;
+            }
+
+            .nav-icon {
+                width: 26px;
+                height: 26px;
+            }
+
+            .nav-logo {
+                width: 44px;
+                height: 44px;
+                border-radius: 16px;
+            }
+
+            .nav-logo svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% block content %}{% endblock %}
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('main.index') }}" class="nav-item {% if request.endpoint == 'main.index' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span class="nav-label">Accueil</span>
+        </a>
+
+        <a href="#" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span class="nav-label">Explorer</span>
+        </a>
+
+        <div class="nav-logo" onclick="window.location.href='{{ url_for('main.index') }}'">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+
+        <a href="#" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+            <span class="nav-label">Emplois</span>
+        </a>
+
+        <a href="{% if user %}{{ url_for('main.profile', username=user.username) }}{% else %}{{ url_for('main.index') }}{% endif %}" 
+           class="nav-item {% if request.endpoint == 'main.profile' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span class="nav-label">Profil</span>
+        </a>
+    </nav>
+
+    <script>
+        // Active state handler
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
