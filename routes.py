@@ -48,111 +48,126 @@ def index():
 # ============================================
 # INSCRIPTION (Register)
 # ============================================
-# @main_bp.route('/register', methods=['GET', 'POST'])
-# def register():
-#     if 'user_id' in session:
-#         return redirect(url_for('main.index'))
+@main_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    if 'user_id' in session:
+        return redirect(url_for('main.index'))
     
-#     if request.method == 'POST':
-#         username = request.form.get('username', '').strip().lower()
-#         email = request.form.get('email', '').strip().lower()
-#         password = request.form.get('password', '')
-#         confirm_password = request.form.get('confirm_password', '')
-#         display_name = request.form.get('display_name', '').strip()
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip().lower()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        display_name = request.form.get('display_name', '').strip()
         
-#         # --- Validations ---
-#         errors = []
+        # --- Validations ---
+        errors = []
         
-#         if not username or len(username) < 3:
-#             errors.append("Le nom d'utilisateur doit faire au moins 3 caractères.")
-#         if not email or '@' not in email:
-#             errors.append("Email invalide.")
-#         if not password or len(password) < 8:
-#             errors.append("Le mot de passe doit faire au moins 8 caractères.")
-#         if password != confirm_password:
-#             errors.append("Les mots de passe ne correspondent pas.")
+        if not username or len(username) < 3:
+            errors.append("Le nom d'utilisateur doit faire au moins 3 caractères.")
+        if not email or '@' not in email:
+            errors.append("Email invalide.")
+        if not password or len(password) < 8:
+            errors.append("Le mot de passe doit faire au moins 8 caractères.")
+        if password != confirm_password:
+            errors.append("Les mots de passe ne correspondent pas.")
         
-#         # Vérifier unicité
-#         if User.query.filter_by(username=username).first():
-#             errors.append("Ce nom d'utilisateur est déjà pris.")
-#         if User.query.filter_by(email=email).first():
-#             errors.append("Cet email est déjà utilisé.")
+        # Vérifier unicité
+        if User.query.filter_by(username=username).first():
+            errors.append("Ce nom d'utilisateur est déjà pris.")
+        if User.query.filter_by(email=email).first():
+            errors.append("Cet email est déjà utilisé.")
         
-#         if errors:
-#             for error in errors:
-#                 flash(error, 'danger')
-#             return render_template('register.html')
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('auth/register.html')
         
-#         # --- Création de l'utilisateur ---
-#         new_user = User(
-#             username=username,
-#             email=email,
-#             password_hash=generate_password_hash(password),
-#             display_name=display_name or username,
-#             headline=request.form.get('headline', '').strip(),
-#             bio=request.form.get('bio', '').strip(),
-#             location=request.form.get('location', '').strip(),
-#             role=request.form.get('role', 'developer'),
-#             experience_level=request.form.get('experience_level', 'junior')
-#         )
+        # --- Création de l'utilisateur ---
+        new_user = User(
+            username=username,
+            email=email,
+            password_hash=generate_password_hash(password),
+            display_name=display_name or username,
+            headline=request.form.get('headline', '').strip(),
+            bio=request.form.get('bio', '').strip(),
+            location=request.form.get('location', '').strip(),
+            role=request.form.get('role', 'developer'),
+            experience_level=request.form.get('experience_level', 'junior')
+        )
         
-#         db.session.add(new_user)
-#         db.session.commit()
+        db.session.add(new_user)
+        db.session.commit()
         
-#         flash('Compte créé avec succès ! Connectez-vous.', 'success')
-#         return redirect(url_for('main.login'))
+        flash('Compte créé avec succès ! Connectez-vous.', 'success')
+        return redirect(url_for('main.login'))
     
-#     return render_template('register.html')
+    return render_template('auth/register.html')
 
 
-# # ============================================
-# # CONNEXION (Login)
-# # ============================================
-# @main_bp.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if 'user_id' in session:
-#         return redirect(url_for('main.index'))
+# ============================================
+# CONNEXION (Login)
+# ============================================
+@main_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if 'user_id' in session:
+        return redirect(url_for('main.index'))
     
-#     if request.method == 'POST':
-#         email = request.form.get('email', '').strip().lower()
-#         password = request.form.get('password', '')
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
         
-#         user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).first()
         
-#         if not user:
-#             flash('Email ou mot de passe incorrect.', 'danger')
-#             return render_template('login.html')
+        if not user:
+            flash('Email ou mot de passe incorrect.', 'danger')
+            return render_template('auth/login.html')
         
-#         if not user.is_active:
-#             flash('Ce compte a été désactivé.', 'danger')
-#             return render_template('login.html')
+        if not user.is_active:
+            flash('Ce compte a été désactivé.', 'danger')
+            return render_template('auth/login.html')
         
-#         if not check_password_hash(user.password_hash, password):
-#             flash('Email ou mot de passe incorrect.', 'danger')
-#             return render_template('login.html')
+        if not check_password_hash(user.password_hash, password):
+            flash('Email ou mot de passe incorrect.', 'danger')
+            return render_template('auth/login.html')
         
-#         # --- Connexion réussie ---
-#         session['user_id'] = user.id
-#         session['username'] = user.username
-#         user.last_login = db.func.now()
-#         db.session.commit()
+        # --- Connexion réussie ---
+        session['user_id'] = user.id
+        session['username'] = user.username
+        user.last_login = db.func.now()
+        db.session.commit()
         
-#         flash(f'Bienvenue, {user.display_name or user.username} !', 'success')
+        flash(f'Bienvenue, {user.display_name or user.username} !', 'success')
         
-#         next_page = request.args.get('next')
-#         return redirect(next_page or url_for('main.index'))
+        next_page = request.args.get('next')
+        return redirect(next_page or url_for('main.index'))
     
-#     return render_template('login.html')
+    return render_template('auth/login.html')
 
 
-# # ============================================
-# # DÉCONNEXION (Logout)
-# # ============================================
-# @main_bp.route('/logout')
-# def logout():
-#     session.clear()
-#     flash('Vous êtes déconnecté.', 'info')
-#     return redirect(url_for('main.index'))
+# ============================================
+# DÉCONNEXION (Logout)
+# ============================================
+@main_bp.route('/logout')
+def logout():
+    session.clear()
+    flash('Vous êtes déconnecté.', 'info')
+    return redirect(url_for('main.index'))
+
+
+# ============================================
+# OAUTH (stubs temporaires)
+# ============================================
+@main_bp.route('/auth/google')
+def google_login():
+    flash("La connexion Google n'est pas encore disponible.", 'info')
+    return redirect(url_for('main.login'))
+
+
+@main_bp.route('/auth/github')
+def github_login():
+    flash("La connexion GitHub n'est pas encore disponible.", 'info')
+    return redirect(url_for('main.login'))
 
 
 # # ============================================
