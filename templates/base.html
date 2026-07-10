@@ -1,20 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}HuTech{% endblock %}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HubTech</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
     <style>
-        :root {
-            --sky-blue: #38bdf8;
-            --night-blue: #0f172a;
-            --violet: #8b5cf6;
-            --white: #ffffff;
-            --black: #0a0a0a;
-            --glass-bg: rgba(15, 23, 42, 0.65);
-            --glass-border: rgba(139, 92, 246, 0.25);
-        }
-
+        /* ===== RESET & BASE ===== */
         * {
             margin: 0;
             padding: 0;
@@ -22,88 +14,414 @@
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #F8FAFC;
             min-height: 100vh;
-            color: var(--white);
+            color: #0A192F;
             padding-bottom: 100px;
             line-height: 1.6;
         }
 
-        /* ========== BOTTOM NAVIGATION ========== */
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 20px 100px 20px;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 24px 0;
+            border-bottom: 1px solid rgba(10, 25, 47, 0.06);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0A192F;
+        }
+
+        .header h1 span {
+            color: #64FFDA;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .header-actions .notif-btn {
+            position: relative;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .header-actions .notif-btn:hover {
+            background: rgba(10, 25, 47, 0.05);
+        }
+
+        .header-actions .notif-btn .badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #FF6B6B;
+            color: #fff;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 40px;
+            border: 2px solid #F8FAFC;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #64FFDA, #0A192F);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        /* ===== STATUT / ACTIVITÉ ===== */
+        .status-bar {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin: 20px 0 24px 0;
+            box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
+            border: 1px solid rgba(10, 25, 47, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-bar .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #64FFDA;
+            flex-shrink: 0;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        .status-bar p {
+            font-size: 0.9rem;
+            color: #8892B0;
+        }
+
+        .status-bar p strong {
+            color: #0A192F;
+            font-weight: 600;
+        }
+
+        /* ===== POSTS ===== */
+        .post {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px 22px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
+            border: 1px solid rgba(10, 25, 47, 0.06);
+            transition: box-shadow 0.2s;
+        }
+
+        .post:hover {
+            box-shadow: 0 4px 12px rgba(10, 25, 47, 0.06);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .post-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #64FFDA;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #0A192F;
+            flex-shrink: 0;
+        }
+
+        .post-meta {
+            flex: 1;
+        }
+
+        .post-meta .name {
+            font-weight: 600;
+            color: #0A192F;
+            font-size: 0.95rem;
+        }
+
+        .post-meta .time {
+            font-size: 0.8rem;
+            color: #8892B0;
+        }
+
+        .post-content {
+            color: #0A192F;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .post-content .hashtag {
+            color: #64FFDA;
+            font-weight: 500;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 20px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(10, 25, 47, 0.04);
+        }
+
+        .post-actions button {
+            background: none;
+            border: none;
+            color: #8892B0;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .post-actions button:hover {
+            color: #64FFDA;
+            background: rgba(100, 255, 218, 0.08);
+        }
+
+        .post-actions button .count {
+            font-weight: 500;
+        }
+
+        /* ===== SECTION CHAT (mini) ===== */
+        .chat-section {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(10, 25, 47, 0.06);
+        }
+
+        .chat-section h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0A192F;
+            margin-bottom: 16px;
+        }
+
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid rgba(10, 25, 47, 0.04);
+        }
+
+        .chat-message .chat-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #0A192F;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .chat-message .msg-content {
+            flex: 1;
+        }
+
+        .chat-message .msg-content .sender {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #0A192F;
+        }
+
+        .chat-message .msg-content .sender span {
+            font-weight: 400;
+            color: #8892B0;
+            font-size: 0.75rem;
+        }
+
+        .chat-message .msg-content p {
+            font-size: 0.9rem;
+            color: #0A192F;
+            margin-top: 2px;
+        }
+
+        /* ===== ACTIVITY LOG (inspiré de votre capture) ===== */
+        .activity-log {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(10, 25, 47, 0.06);
+        }
+
+        .activity-log h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0A192F;
+            margin-bottom: 12px;
+        }
+
+        .activity-item {
+            padding: 12px 16px;
+            background: #ffffff;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(10, 25, 47, 0.04);
+            font-size: 0.85rem;
+            color: #8892B0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .activity-item .icon {
+            color: #64FFDA;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .activity-item strong {
+            color: #0A192F;
+            font-weight: 600;
+        }
+
+        .activity-item .code {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.75rem;
+            background: rgba(10, 25, 47, 0.04);
+            padding: 2px 10px;
+            border-radius: 6px;
+            color: #0A192F;
+        }
+
+        /* =========================================================
+               BOTTOM NAV — GLASS + THÈME BLANC
+            ========================================================= */
+
         .bottom-nav {
             position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            width: calc(100% - 40px);
-            max-width: 600px;
+            width: calc(100% - 32px);
+            max-width: 580px;
             height: 70px;
-            background: var(--glass-bg);
+            background: rgba(255, 255, 255, 0.72);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
+            border: 1px solid rgba(10, 25, 47, 0.08);
+            border-radius: 40px;
             display: flex;
             align-items: center;
             justify-content: space-around;
-            padding: 0 20px;
+            padding: 0 12px;
             z-index: 1000;
-            box-shadow: 
-                0 8px 32px rgba(139, 92, 246, 0.15),
-                0 0 0 1px rgba(56, 189, 248, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            transition: all 0.3s ease;
+            box-shadow:
+                0 8px 32px rgba(10, 25, 47, 0.08),
+                0 0 0 1px rgba(10, 25, 47, 0.03),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            transition: box-shadow 0.25s ease;
         }
 
         .bottom-nav:hover {
-            box-shadow: 
-                0 12px 40px rgba(139, 92, 246, 0.25),
-                0 0 0 1px rgba(56, 189, 248, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            box-shadow:
+                0 12px 40px rgba(10, 25, 47, 0.12),
+                0 0 0 1px rgba(10, 25, 47, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
+        /* --- Nav items --- */
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            color: rgba(255, 255, 255, 0.5);
+            gap: 1px;
+            padding: 6px 14px;
+            border-radius: 30px;
             text-decoration: none;
-            min-width: 60px;
+            color: #8892B0;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+            position: relative;
+            min-width: 54px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
         }
 
         .nav-item:hover {
-            color: var(--sky-blue);
-            background: rgba(56, 189, 248, 0.1);
+            color: #0A192F;
+            background: rgba(10, 25, 47, 0.04);
         }
 
         .nav-item.active {
-            color: var(--sky-blue);
-            background: rgba(56, 189, 248, 0.15);
+            color: #0A192F;
+            background: rgba(10, 25, 47, 0.06);
         }
 
-        .nav-item.active::before {
+        .nav-item.active::after {
             content: '';
             position: absolute;
-            top: -4px;
-            width: 4px;
-            height: 4px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
-            background: var(--sky-blue);
-            box-shadow: 0 0 8px var(--sky-blue);
+            background: #64FFDA;
+            box-shadow: 0 0 10px rgba(100, 255, 218, 0.4);
         }
 
         .nav-icon {
             width: 24px;
             height: 24px;
-            transition: transform 0.3s ease;
+            transition: transform 0.2s ease;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         .nav-item:hover .nav-icon {
@@ -112,53 +430,90 @@
 
         .nav-item.active .nav-icon {
             transform: translateY(-2px);
-            filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
+            filter: drop-shadow(0 0 6px rgba(100, 255, 218, 0.3));
         }
 
         .nav-label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 500;
-            letter-spacing: 0.3px;
-            transition: all 0.3s ease;
+            letter-spacing: 0.2px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            color: #8892B0;
         }
 
+        .nav-item.active .nav-label {
+            opacity: 1;
+            color: #0A192F;
+        }
+
+        /* --- Bouton logo central --- */
         .nav-logo {
             display: flex;
             align-items: center;
             justify-content: center;
             width: 50px;
             height: 50px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, var(--sky-blue), var(--violet));
-            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
-            transition: all 0.3s ease;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #64FFDA, #0A192F);
+            box-shadow: 0 4px 16px rgba(100, 255, 218, 0.25);
+            transition: all 0.25s ease;
             cursor: pointer;
             border: none;
+            flex-shrink: 0;
         }
 
         .nav-logo:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 6px 25px rgba(139, 92, 246, 0.6);
+            transform: scale(1.06) rotate(2deg);
+            box-shadow: 0 6px 28px rgba(100, 255, 218, 0.35);
         }
 
         .nav-logo svg {
-            width: 28px;
-            height: 28px;
-            fill: white;
+            width: 26px;
+            height: 26px;
+            fill: #fff;
+            transition: transform 0.2s;
         }
 
+        .nav-logo:hover svg {
+            transform: scale(1.05);
+        }
+
+        /* --- Badge de notification sur la nav --- */
+        .nav-item .badge {
+            position: absolute;
+            top: 0px;
+            right: 4px;
+            background: #FF6B6B;
+            color: #fff;
+            font-size: 0.5rem;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 40px;
+            line-height: 1.4;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.2);
+        }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 480px) {
+            .container {
+                padding: 12px 16px 100px 16px;
+            }
+
             .bottom-nav {
-                height: 60px;
-                border-radius: 30px;
-                padding: 0 12px;
+                height: 62px;
+                border-radius: 32px;
+                padding: 0 6px;
                 bottom: 12px;
-                width: calc(100% - 24px);
+                width: calc(100% - 16px);
+                max-width: 400px;
             }
 
             .nav-item {
-                min-width: 50px;
-                padding: 6px 10px;
+                min-width: 44px;
+                padding: 4px 6px;
+                gap: 0px;
             }
 
             .nav-label {
@@ -166,77 +521,110 @@
             }
 
             .nav-icon {
-                width: 26px;
-                height: 26px;
+                width: 22px;
+                height: 22px;
             }
 
             .nav-logo {
                 width: 44px;
                 height: 44px;
-                border-radius: 16px;
+                border-radius: 18px;
+            }
+            .nav-logo svg {
+                width: 22px;
+                height: 22px;
             }
 
-            .nav-logo svg {
-                width: 24px;
-                height: 24px;
+            .nav-item .badge {
+                top: -2px;
+                right: 0px;
+                font-size: 0.45rem;
+                padding: 0px 5px;
+            }
+
+            .post {
+                padding: 16px 18px;
+            }
+
+            .header h1 {
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (min-width: 481px) {
+            .nav-label {
+                display: block;
             }
         }
     </style>
-    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    {% block content %}{% endblock %}
-    
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <a href="{{ url_for('main.index') }}" class="nav-item {% if request.endpoint == 'main.index' %}active{% endif %}">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
+
+
+    <!-- =========================================================
+         BOTTOM NAV — GLASS + THÈME BLANC
+         ========================================================= -->
+    <nav class="bottom-nav" role="navigation">
+
+        <!-- Accueil (actif) -->
+        <a href="{{ url_for('main.index') }}" class="nav-item {% if request.endpoint == 'main.index' %}active{% endif %}" class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
             <span class="nav-label">Accueil</span>
         </a>
 
+        <!-- Explorer -->
         <a href="#" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <span class="nav-label">Explorer</span>
         </a>
 
-        <div class="nav-logo" onclick="window.location.href='{{ url_for('main.index') }}'">
+        <!-- Logo central -->
+        <button class="nav-logo" onclick="alert('TechSocial · Hub')" aria-label="TechSocial Hub">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
-        </div>
+        </button>
 
+        <!-- Notifications -->
         <a href="#" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
             </svg>
-            <span class="nav-label">Emplois</span>
+            <span class="badge">3</span>
+            <span class="nav-label">Alertes</span>
         </a>
 
-        <a href="{% if user %}{{ url_for('main.profile', username=user.username) }}{% else %}{{ url_for('main.login') }}{% endif %}" 
-           class="nav-item {% if request.endpoint == 'main.profile' %}active{% endif %}">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
+        <!-- Profil -->
+        <a href="#" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
             </svg>
             <span class="nav-label">Profil</span>
         </a>
     </nav>
 
+    <!-- Script : gestion de l'état actif -->
     <script>
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
+        (function() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // si c'est un lien, on empêche le rechargement pour la démo
+                    if (this.tagName === 'A') e.preventDefault();
+                    navItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
             });
-        });
+        })();
     </script>
-    {% block extra_js %}{% endblock %}
+
 </body>
 </html>

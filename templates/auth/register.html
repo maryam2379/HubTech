@@ -1,438 +1,785 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Inscription - HuTech{% endblock %}</title>
-    <style>
-        :root {
-            --sky-blue: #38bdf8;
-            --night-blue: #0f172a;
-            --violet: #8b5cf6;
-            --white: #ffffff;
-            --black: #0a0a0a;
-            --glass-bg: rgba(15, 23, 42, 0.6);
-            --glass-border: rgba(139, 92, 246, 0.2);
-        }
+{% extends "auth_base.html" %}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% block title %}Rejoindre HuTech{% endblock %}
 
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-            min-height: 100vh;
-            color: var(--white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-    </style>
-    {% block extra_css %}{% endblock %}
-</head>
-<body>
+{% block extra_css %}
 <style>
-  .auth-page {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    padding-bottom: 100px;
-  }
-
-  .auth-card {
+  .card {
     width: 100%;
     max-width: 460px;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    border-radius: 30px;
-    padding: 40px 32px;
-    box-shadow: 
-      0 8px 32px rgba(139, 92, 246, 0.1),
-      0 0 0 1px rgba(56, 189, 248, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: rgba(13, 32, 56, 0.72);
+    border: 1px solid rgba(100, 255, 218, 0.15);
+    border-radius: 14px;
+    padding: 36px 32px 28px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(100, 255, 218, 0.03);
+    margin-top: 60px;
   }
 
-  .auth-logo {
-    width: 60px;
-    height: 60px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--sky-blue), var(--violet));
+  /* Progress */
+  .progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+  }
+
+  .progress .step-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+  }
+
+  .progress .step-node .circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid var(--slate);
+    color: var(--slate);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 24px;
-    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
-  }
-
-  .auth-logo svg {
-    width: 32px;
-    height: 32px;
-    fill: white;
-  }
-
-  .auth-title {
-    text-align: center;
-    font-size: 1.75rem;
-    font-weight: 800;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--sky-blue), var(--violet));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .auth-subtitle {
-    text-align: center;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.9rem;
-    margin-bottom: 32px;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-label {
-    display: block;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.85rem;
-    font-weight: 500;
-    margin-bottom: 8px;
-    padding-left: 4px;
-  }
-
-  .form-input,
-  .form-select {
-    width: 100%;
-    padding: 14px 18px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(139, 92, 246, 0.15);
-    border-radius: 16px;
-    color: var(--white);
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    outline: none;
-  }
-
-  .form-input::placeholder {
-    color: rgba(255, 255, 255, 0.25);
-  }
-
-  .form-input:focus,
-  .form-select:focus {
-    border-color: var(--sky-blue);
-    background: rgba(56, 189, 248, 0.05);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
-  }
-
-  .form-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2338bdf8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-    cursor: pointer;
-  }
-
-  .form-select option {
-    background: var(--night-blue);
-    color: var(--white);
-  }
-
-  .auth-btn {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 16px;
-    font-size: 1rem;
+    font-size: 13px;
     font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    background: var(--navy);
+    transition: all .35s ease;
+    z-index: 2;
+  }
+
+  .progress .step-node .label {
+    font-size: 10px;
+    color: var(--slate);
+    margin-top: 6px;
+    letter-spacing: .5px;
+    text-align: center;
+    transition: color .35s ease;
+  }
+
+  .progress .step-node:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: calc(50% + 20px);
+    width: calc(100% - 25px);
+    height: 1.5px;
+    background: var(--slate);
+    opacity: .4;
+    z-index: 1;
+    transition: background .4s ease, opacity .4s ease;
+  }
+
+  .progress .step-node.done::after {
+    background: var(--teal);
+    opacity: .7;
+  }
+
+  .progress .step-node.active .circle {
+    border-color: var(--teal);
+    color: var(--teal);
+    box-shadow: 0 0 14px rgba(100, 255, 218, 0.45);
+  }
+
+  .progress .step-node.done .circle {
+    border-color: var(--teal);
+    background: var(--teal);
+    color: var(--navy);
+  }
+
+  .progress .step-node.active .label,
+  .progress .step-node.done .label {
+    color: var(--teal);
+  }
+
+  /* Steps */
+  .step {
+    display: none;
+    animation: fadeIn .4s ease;
+  }
+
+  .step.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  h2.step-title {
+    font-size: 19px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  p.step-sub {
+    font-size: 12.5px;
+    color: var(--slate);
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+
+  .field {
     margin-bottom: 16px;
+    position: relative;
   }
 
-  .btn-primary {
-    background: linear-gradient(135deg, var(--sky-blue), var(--violet));
-    color: white;
-    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+  .field label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--slate);
+    margin-bottom: 6px;
+    letter-spacing: .4px;
   }
 
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(139, 92, 246, 0.5);
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    background: rgba(10, 25, 47, 0.6);
+    border: 1px solid rgba(136, 146, 176, 0.35);
+    border-radius: 8px;
+    padding: 11px 13px;
+    color: var(--white);
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color .25s ease, box-shadow .25s ease;
+    font-family: inherit;
   }
 
-  .divider {
+  .field textarea {
+    resize: none;
+    min-height: 70px;
+  }
+
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.12);
+  }
+
+  .field input::placeholder,
+  .field textarea::placeholder {
+    color: #586d8f;
+  }
+
+  .field.error input,
+  .field.error textarea {
+    border-color: var(--coral);
+  }
+
+  .field .msg {
+    font-size: 11px;
+    color: var(--coral);
+    margin-top: 5px;
+    min-height: 14px;
+    display: none;
+  }
+
+  .field.error .msg {
+    display: block;
+  }
+
+  .pw-wrap {
+    position: relative;
+  }
+
+  .pw-toggle {
+    position: absolute;
+    right: 12px;
+    top: 36px;
+    font-size: 11px;
+    color: var(--teal);
+    cursor: pointer;
+    user-select: none;
+    background: none;
+    border: none;
+  }
+
+  /* OAuth buttons */
+  .oauth-section {
+    margin-bottom: 24px;
+  }
+
+  .oauth-divider {
     display: flex;
     align-items: center;
-    margin: 24px 0;
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 0.8rem;
+    margin: 20px 0;
+    color: var(--slate);
+    font-size: 11px;
   }
 
-  .divider::before,
-  .divider::after {
+  .oauth-divider::before,
+  .oauth-divider::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: rgba(139, 92, 246, 0.2);
+    background: rgba(136, 146, 176, 0.2);
   }
 
-  .divider span {
+  .oauth-divider span {
     padding: 0 16px;
   }
 
+  .oauth-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
   .oauth-btn {
-    width: 100%;
-    padding: 14px;
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.03);
+    flex: 1;
+    padding: 12px;
+    border: 1px solid rgba(136, 146, 176, 0.25);
+    border-radius: 10px;
+    background: rgba(10, 25, 47, 0.5);
     color: var(--white);
-    font-size: 0.9rem;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 10px;
     text-decoration: none;
   }
 
   .oauth-btn:hover {
-    border-color: var(--sky-blue);
-    background: rgba(56, 189, 248, 0.05);
+    border-color: var(--teal);
+    background: rgba(100, 255, 218, 0.08);
     transform: translateY(-1px);
   }
 
   .oauth-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 
-  .auth-footer {
-    text-align: center;
-    margin-top: 24px;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.85rem;
+  /* Interest chips */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
   }
 
-  .auth-footer a {
-    color: var(--sky-blue);
-    text-decoration: none;
+  .chip {
+    padding: 8px 13px;
+    border-radius: 20px;
+    border: 1px solid rgba(136, 146, 176, 0.35);
+    font-size: 12px;
+    color: var(--slate);
+    cursor: pointer;
+    transition: all .2s ease;
+    background: rgba(10, 25, 47, 0.4);
+  }
+
+  .chip:hover {
+    border-color: var(--teal);
+    color: var(--white);
+  }
+
+  .chip.selected {
+    border-color: var(--teal);
+    background: rgba(100, 255, 218, 0.12);
+    color: var(--teal);
+  }
+
+  /* Recap */
+  .recap {
+    background: rgba(10, 25, 47, 0.5);
+    border: 1px solid rgba(136, 146, 176, 0.2);
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .recap div {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dashed rgba(136, 146, 176, 0.15);
+  }
+
+  .recap div:last-child {
+    border-bottom: none;
+  }
+
+  .recap span.k {
+    color: var(--slate);
+  }
+
+  .recap span.v {
+    color: var(--white);
+    font-weight: 500;
+    max-width: 60%;
+    text-align: right;
+  }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 22px;
+  }
+
+  button.btn {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
     font-weight: 600;
-    transition: color 0.3s ease;
+    border: none;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+    letter-spacing: .3px;
   }
 
-  .auth-footer a:hover {
-    color: var(--violet);
+  button.btn:active {
+    transform: scale(0.97);
   }
 
-  .alert {
-    padding: 14px 18px;
-    border-radius: 14px;
-    margin-bottom: 20px;
-    font-size: 0.85rem;
+  .btn-primary {
+    background: var(--teal);
+    color: var(--navy);
+    box-shadow: 0 4px 18px rgba(100, 255, 218, 0.25);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 6px 24px rgba(100, 255, 218, 0.4);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--slate);
+    border: 1px solid rgba(136, 146, 176, 0.35);
+  }
+
+  .btn-ghost:hover {
+    color: var(--white);
+    border-color: var(--slate);
+  }
+
+  .login-link {
+    text-align: center;
+    font-size: 12px;
+    color: var(--slate);
+    margin-top: 20px;
+  }
+
+  .login-link a {
+    color: var(--teal);
+    text-decoration: none;
+  }
+
+  /* Success screen */
+  .success {
+    text-align: center;
+    padding: 10px 0 4px;
+  }
+
+  .success .check {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(100, 255, 218, 0.12);
+    border: 1.5px solid var(--teal);
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    margin: 0 auto 18px;
+    font-size: 28px;
+    color: var(--teal);
   }
 
-  .alert-danger {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
+  .success h2 {
+    font-size: 19px;
+    margin-bottom: 8px;
   }
 
-  .alert-success {
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.2);
-    color: #86efac;
+  .success p {
+    font-size: 12.5px;
+    color: var(--slate);
+    line-height: 1.6;
+    margin-bottom: 6px;
   }
 
-  .alert-warning {
-    background: rgba(234, 179, 8, 0.1);
-    border: 1px solid rgba(234, 179, 8, 0.2);
-    color: #fde047;
+  .success strong {
+    color: var(--teal);
   }
 
-  @media (max-width: 480px) {
-    .form-row {
-      grid-template-columns: 1fr;
+  @media (max-width:480px) {
+    .card {
+      padding: 26px 20px 22px;
+      margin-top: 78px;
+    }
+
+    .progress .step-node .label {
+      display: none;
+    }
+
+    .oauth-buttons {
+      flex-direction: column;
     }
   }
 </style>
+{% endblock %}
 
-<div class="auth-page">
-  <div class="auth-card">
-    <!-- Logo -->
-    <a href="{{ url_for('main.index') }}" class="nav-item {% if request.endpoint == 'main.index' %}active{% endif %}">
-        <div class="auth-logo">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-        </div>
-    </a>
+{% block content %}
+<form class="card" id="signupForm" method="POST" action="{{ url_for('main.register') }}" novalidate>
 
-    <h1 class="auth-title">Rejoindre HuTech</h1>
-    <p class="auth-subtitle">Créez votre profil développeur</p>
-
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <form method="POST" action="{{ url_for('main.register') }}">
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Nom d'utilisateur</label>
-          <input 
-            type="text" 
-            name="username" 
-            class="form-input" 
-            placeholder="johndev"
-            required
-          >
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nom affiché</label>
-          <input 
-            type="text" 
-            name="display_name" 
-            class="form-input" 
-            placeholder="John Doe"
-          >
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input 
-          type="email" 
-          name="email" 
-          class="form-input" 
-          placeholder="votre@email.com"
-          required
-        >
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Mot de passe</label>
-          <input 
-            type="password" 
-            name="password" 
-            class="form-input" 
-            placeholder="8 caractères min."
-            required
-          >
-        </div>
-        <div class="form-group">
-          <label class="form-label">Confirmer</label>
-          <input 
-            type="password" 
-            name="confirm_password" 
-            class="form-input" 
-            placeholder="••••••••"
-            required
-          >
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Rôle</label>
-          <select name="role" class="form-select">
-            <option value="developer">Développeur</option>
-            <option value="designer">Designer</option>
-            <option value="devops">DevOps</option>
-            <option value="data_scientist">Data Scientist</option>
-            <option value="product_manager">Product Manager</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Niveau</label>
-          <select name="experience_level" class="form-select">
-            <option value="junior">Junior</option>
-            <option value="mid">Intermédiaire</option>
-            <option value="senior">Senior</option>
-            <option value="lead">Lead</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Bio (optionnel)</label>
-        <input 
-          type="text" 
-          name="bio" 
-          class="form-input" 
-          placeholder="Full-Stack Dev | React & Python | Open Source"
-        >
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Localisation</label>
-        <input 
-          type="text" 
-          name="location" 
-          class="form-input" 
-          placeholder="Paris, France"
-        >
-      </div>
-
-      <button type="submit" class="auth-btn btn-primary">
-        Créer mon compte
-      </button>
-    </form>
-
-    <div class="divider">
-      <span>ou s'inscrire avec</span>
+  <!-- OAuth en premier -->
+  <div class="oauth-section">
+    <div class="oauth-buttons">
+      <a href="{{ url_for('main.google_login') }}" class="oauth-btn">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.85 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.86-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Google
+      </a>
+      <a href="{{ url_for('main.github_login') }}" class="oauth-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
     </div>
 
-    <a href="{{ url_for('main.google_login') }}" class="oauth-btn">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-        <path fill="#FBBC05" d="M5.85 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.86-2.6 3.3-4.53 6.16-4.53z"/>
-      </svg>
-      Google
-    </a>
-
-    <a href="{{ url_for('main.github_login') }}" class="oauth-btn">
-      <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-      </svg>
-      GitHub
-    </a>
-
-    <div class="auth-footer">
-      Déjà membre ? 
-      <a href="{{ url_for('main.login') }}">Se connecter</a>
+    <div class="oauth-divider">
+      <span>ou s'inscrire avec email</span>
     </div>
   </div>
-</div>
-</body>
-</html>
+
+  <div class="progress" id="progress">
+    <div class="step-node active" data-step="1">
+      <div class="circle">1</div>
+      <div class="label">Compte</div>
+    </div>
+    <div class="step-node" data-step="2">
+      <div class="circle">2</div>
+      <div class="label">Profil</div>
+    </div>
+    <div class="step-node" data-step="3">
+      <div class="circle">3</div>
+      <div class="label">Intérêts</div>
+    </div>
+    <div class="step-node" data-step="4">
+      <div class="circle">4</div>
+      <div class="label">Validation</div>
+    </div>
+  </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- STEP 1 -->
+  <div class="step active" data-step="1">
+    <h2 class="step-title">Crée ton compte</h2>
+    <p class="step-sub">Ton identifiant et tes accès à la communauté HubTech.</p>
+
+    <div class="field" id="f-username">
+      <label>Nom d'utilisateur</label>
+      <input type="text" name="username" id="username" placeholder="ex: mayam_dev" autocomplete="off">
+      <div class="msg">Choisis un identifiant (3 caractères minimum).</div>
+    </div>
+
+    <div class="field" id="f-email">
+      <label>Adresse email</label>
+      <input type="email" name="email" id="email" placeholder="toi@exemple.com" autocomplete="off">
+      <div class="msg">Entre une adresse email valide.</div>
+    </div>
+
+    <div class="field pw-wrap" id="f-password">
+      <label>Mot de passe</label>
+      <input type="password" name="password" id="password" placeholder="8 caractères minimum">
+      <button type="button" class="pw-toggle" data-target="password">Afficher</button>
+      <div class="msg">Le mot de passe doit contenir au moins 8 caractères.</div>
+    </div>
+
+    <div class="field pw-wrap" id="f-confirm">
+      <label>Confirmer le mot de passe</label>
+      <input type="password" name="confirm_password" id="confirm" placeholder="Retape ton mot de passe">
+      <button type="button" class="pw-toggle" data-target="confirm">Afficher</button>
+      <div class="msg">Les mots de passe ne correspondent pas.</div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" data-step="2">
+    <h2 class="step-title">Parle-nous de toi</h2>
+    <p class="step-sub">Ces informations apparaîtront sur ton profil public.</p>
+
+    <div class="field" id="f-fullname">
+      <label>Nom complet</label>
+      <input type="text" name="display_name" id="fullname" placeholder="ex: Mar'yam Fouda">
+      <div class="msg">Indique ton nom complet.</div>
+    </div>
+
+    <div class="field" id="f-role">
+      <label>Domaine tech</label>
+      <select name="role" id="role">
+        <option value="">Sélectionne un domaine</option>
+        <option value="developer">Développement logiciel</option>
+        <option value="data_scientist">Data & IA</option>
+        <option value="cybersecurity">Cybersécurité</option>
+        <option value="hardware">Hardware & IoT</option>
+        <option value="devops">Réseaux & Systèmes</option>
+        <option value="designer">Design produit</option>
+        <option value="other">Autre</option>
+      </select>
+      <div class="msg">Sélectionne ton domaine.</div>
+    </div>
+
+    <div class="field" id="f-bio">
+      <label>Bio courte</label>
+      <textarea name="bio" id="bio" placeholder="Quelques mots sur toi, tes projets, tes objectifs..."></textarea>
+      <div class="msg">La bio ne peut pas dépasser 200 caractères.</div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" data-step="3">
+    <h2 class="step-title">Tes centres d'intérêt</h2>
+    <p class="step-sub">Sélectionne au moins 2 sujets pour personnaliser ton fil.</p>
+
+    <div class="field" id="f-interests">
+      <div class="chips" id="chips">
+        <div class="chip" data-value="ai">Intelligence Artificielle</div>
+        <div class="chip" data-value="web">Développement Web</div>
+        <div class="chip" data-value="mobile">Mobile</div>
+        <div class="chip" data-value="cloud">Cloud</div>
+        <div class="chip" data-value="blockchain">Blockchain</div>
+        <div class="chip" data-value="cybersecurity">Cybersécurité</div>
+        <div class="chip" data-value="electronics">Électronique</div>
+        <div class="chip" data-value="opensource">Open Source</div>
+        <div class="chip" data-value="entrepreneurship">Entrepreneuriat</div>
+        <div class="chip" data-value="data_science">Data Science</div>
+      </div>
+      <input type="hidden" name="interests" id="interestsInput">
+      <div class="msg">Choisis au moins 2 centres d'intérêt.</div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step" data-step="4">
+    <h2 class="step-title">Vérifie tes informations</h2>
+    <p class="step-sub">Confirme pour rejoindre le réseau HubTech.</p>
+    <div class="recap" id="recap"></div>
+    <div class="field" style="margin-top:14px;">
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+        <input type="checkbox" id="terms" style="width:auto;">
+        <span style="font-size:12px; color:var(--slate);">J'accepte les conditions d'utilisation de HubTech</span>
+      </label>
+      <div class="msg" id="termsMsg">Tu dois accepter les conditions pour continuer.</div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="step" data-step="done">
+    <div class="success">
+      <div class="check">✓</div>
+      <h2>Bienvenue sur HubTech !</h2>
+      <p>Ton compte <strong id="doneUser"></strong> a été créé avec succès.</p>
+      <p>Un lien de confirmation vient d'être envoyé à ton adresse email.</p>
+      <div class="btn-row" style="margin-top: 24px;">
+        <a href="{{ url_for('main.login') }}" class="btn btn-primary" style="text-decoration: none; text-align: center;">Se connecter</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row" id="btnRow">
+    <button type="button" class="btn btn-ghost" id="backBtn" style="display:none;">Retour</button>
+    <button type="button" class="btn btn-primary" id="nextBtn">Continuer</button>
+  </div>
+
+  <div class="login-link">Déjà membre ? <a href="{{ url_for('main.login') }}">Se connecter</a></div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* ===================== FORMULAIRE MULTI-ÉTAPES ===================== */
+  const steps = ['1', '2', '3', '4'];
+  let current = 0;
+
+  const stepEls = {
+    '1': document.querySelector('.step[data-step="1"]'),
+    '2': document.querySelector('.step[data-step="2"]'),
+    '3': document.querySelector('.step[data-step="3"]'),
+    '4': document.querySelector('.step[data-step="4"]'),
+    'done': document.querySelector('.step[data-step="done"]')
+  };
+  const nodeEls = document.querySelectorAll('.step-node');
+  const nextBtn = document.getElementById('nextBtn');
+  const backBtn = document.getElementById('backBtn');
+  const btnRow = document.getElementById('btnRow');
+  const form = document.getElementById('signupForm');
+
+  function setError(fieldId, isError) {
+    const el = document.getElementById(fieldId) || document.getElementById('f-' + fieldId);
+    if (!el) return;
+    el.classList.toggle('error', isError);
+  }
+
+  function updateProgress() {
+    nodeEls.forEach(node => {
+      const s = node.dataset.step;
+      node.classList.remove('active', 'done');
+      if (steps.indexOf(s) < current) node.classList.add('done');
+      if (steps.indexOf(s) === current) node.classList.add('active');
+    });
+  }
+
+  function showStep(idx) {
+    Object.values(stepEls).forEach(el => el && el.classList.remove('active'));
+    stepEls[steps[idx]].classList.add('active');
+    backBtn.style.display = idx === 0 ? 'none' : 'block';
+    nextBtn.textContent = idx === steps.length - 1 ? "Créer mon compte" : "Continuer";
+    updateProgress();
+  }
+
+  function validateStep1() {
+    let ok = true;
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const pw = document.getElementById('password').value;
+    const cf = document.getElementById('confirm').value;
+
+    setError('f-username', username.length < 3);
+    if (username.length < 3) ok = false;
+
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    setError('f-email', !emailOk);
+    if (!emailOk) ok = false;
+
+    setError('f-password', pw.length < 8);
+    if (pw.length < 8) ok = false;
+
+    setError('f-confirm', cf !== pw || cf.length === 0);
+    if (cf !== pw || cf.length === 0) ok = false;
+
+    if (!ok) showToast("Corrige les champs en rouge pour continuer.");
+    return ok;
+  }
+
+  function validateStep2() {
+    let ok = true;
+    const fullname = document.getElementById('fullname').value.trim();
+    const role = document.getElementById('role').value;
+    const bio = document.getElementById('bio').value;
+
+    setError('f-fullname', fullname.length < 2);
+    if (fullname.length < 2) ok = false;
+
+    setError('f-role', role === '');
+    if (role === '') ok = false;
+
+    setError('f-bio', bio.length > 200);
+    if (bio.length > 200) ok = false;
+
+    if (!ok) showToast("Complète ton profil avant de continuer.");
+    return ok;
+  }
+
+  function validateStep3() {
+    const selected = document.querySelectorAll('.chip.selected').length;
+    const ok = selected >= 2;
+    setError('f-interests', !ok);
+    if (!ok) showToast("Sélectionne au moins 2 centres d'intérêt.");
+    return ok;
+  }
+
+  function validateStep4() {
+    const terms = document.getElementById('terms').checked;
+    document.getElementById('termsMsg').style.display = terms ? 'none' : 'block';
+    if (!terms) showToast("Accepte les conditions pour finaliser.");
+    return terms;
+  }
+
+  function buildRecap() {
+    const recap = document.getElementById('recap');
+    const interests = [...document.querySelectorAll('.chip.selected')].map(c => c.textContent).join(', ');
+    recap.innerHTML = `
+      <div><span class="k">Utilisateur</span><span class="v">${document.getElementById('username').value}</span></div>
+      <div><span class="k">Email</span><span class="v">${document.getElementById('email').value}</span></div>
+      <div><span class="k">Nom complet</span><span class="v">${document.getElementById('fullname').value}</span></div>
+      <div><span class="k">Domaine</span><span class="v">${document.getElementById('role').value}</span></div>
+      <div><span class="k">Intérêts</span><span class="v">${interests}</span></div>
+    `;
+  }
+
+  function collectInterests() {
+    const selected = [...document.querySelectorAll('.chip.selected')].map(c => c.dataset.value);
+    document.getElementById('interestsInput').value = selected.join(',');
+  }
+
+  nextBtn.addEventListener('click', () => {
+    const validators = [validateStep1, validateStep2, validateStep3, validateStep4];
+    if (!validators[current]()) return;
+
+    if (current === 2) buildRecap();
+
+    if (current === steps.length - 1) {
+      // Soumission finale
+      collectInterests();
+      document.getElementById('doneUser').textContent = '@' + document.getElementById('username').value;
+      Object.values(stepEls).forEach(el => el && el.classList.remove('active'));
+      stepEls['done'].classList.add('active');
+      btnRow.style.display = 'none';
+      document.getElementById('progress').style.display = 'none';
+      
+      // Soumettre le formulaire
+      form.submit();
+      return;
+    }
+    current++;
+    showStep(current);
+  });
+
+  backBtn.addEventListener('click', () => {
+    if (current > 0) {
+      current--;
+      showStep(current);
+    }
+  });
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+  });
+
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const isPw = input.type === 'password';
+      input.type = isPw ? 'text' : 'password';
+      btn.textContent = isPw ? 'Masquer' : 'Afficher';
+    });
+  });
+
+  form.addEventListener('submit', e => {
+    if (current !== steps.length - 1) e.preventDefault();
+  });
+</script>
+{% endblock %}

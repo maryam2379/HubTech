@@ -1,16 +1,29 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = Path(__file__).resolve().parent
+DEFAULT_SQLITE_URI = f"sqlite:///{BASE_DIR / 'hubtech.db'}"
+
+
+def get_database_uri():
+    use_local_sqlite = os.getenv('USE_LOCAL_SQLITE', 'true').lower() in {'1', 'true', 'yes', 'on'}
+
+    if use_local_sqlite:
+        return DEFAULT_SQLITE_URI
+
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        return database_url
+
+    return DEFAULT_SQLITE_URI
+
 
 class Config:
     # Base de données
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        'DATABASE_URL',
-        f"sqlite:///{os.path.join(BASE_DIR, 'hubtech.db')}"
-    )
+    SQLALCHEMY_DATABASE_URI = get_database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Sécurité

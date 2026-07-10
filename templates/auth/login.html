@@ -1,165 +1,105 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Connexion - HuTech{% endblock %}</title>
-    <style>
-        :root {
-            --sky-blue: #38bdf8;
-            --night-blue: #0f172a;
-            --violet: #8b5cf6;
-            --white: #ffffff;
-            --black: #0a0a0a;
-            --glass-bg: rgba(15, 23, 42, 0.6);
-            --glass-border: rgba(139, 92, 246, 0.2);
-        }
+{% extends "auth_base.html" %}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% block title %}Connexion - HuTech{% endblock %}
 
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-            min-height: 100vh;
-            color: var(--white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-    </style>
-    {% block extra_css %}{% endblock %}
-</head>
-<body>
+{% block extra_css %}
 <style>
-  .auth-page {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    padding-bottom: 100px;
-  }
-
-  .auth-card {
+  .card {
     width: 100%;
     max-width: 420px;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    border-radius: 30px;
-    padding: 40px 32px;
-    box-shadow: 
-      0 8px 32px rgba(139, 92, 246, 0.1),
-      0 0 0 1px rgba(56, 189, 248, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: rgba(13, 32, 56, 0.72);
+    border: 1px solid rgba(100, 255, 218, 0.15);
+    border-radius: 14px;
+    padding: 40px 36px 32px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(100, 255, 218, 0.03);
+    margin-top: 60px;
+    text-align: center;
   }
 
   .auth-logo {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     border-radius: 20px;
-    background: linear-gradient(135deg, var(--sky-blue), var(--violet));
+    background: linear-gradient(135deg, var(--teal), #0A192F);
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 24px;
-    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 4px 24px rgba(100, 255, 218, 0.3);
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
   }
 
   .auth-logo svg {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     fill: white;
   }
 
   .auth-title {
-    text-align: center;
-    font-size: 1.75rem;
-    font-weight: 800;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--sky-blue), var(--violet));
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, var(--teal), #a78bfa);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
+    color: transparent;
   }
 
   .auth-subtitle {
-    text-align: center;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.9rem;
-    margin-bottom: 32px;
+    color: var(--slate);
+    font-size: 13px;
+    margin-bottom: 28px;
   }
 
-  .form-group {
+  /* OAuth buttons */
+  .oauth-buttons {
+    display: flex;
+    gap: 12px;
     margin-bottom: 20px;
   }
 
-  .form-label {
-    display: block;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.85rem;
-    font-weight: 500;
-    margin-bottom: 8px;
-    padding-left: 4px;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 14px 18px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(139, 92, 246, 0.15);
-    border-radius: 16px;
+  .oauth-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid rgba(136, 146, 176, 0.25);
+    border-radius: 10px;
+    background: rgba(10, 25, 47, 0.5);
     color: var(--white);
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    outline: none;
-  }
-
-  .form-input::placeholder {
-    color: rgba(255, 255, 255, 0.25);
-  }
-
-  .form-input:focus {
-    border-color: var(--sky-blue);
-    background: rgba(56, 189, 248, 0.05);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
-  }
-
-  .auth-btn {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 16px;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
   }
 
-  .btn-primary {
-    background: linear-gradient(135deg, var(--sky-blue), var(--violet));
-    color: white;
-    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+  .oauth-btn:hover {
+    border-color: var(--teal);
+    background: rgba(100, 255, 218, 0.08);
+    transform: translateY(-1px);
   }
 
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(139, 92, 246, 0.5);
+  .oauth-btn svg {
+    width: 18px;
+    height: 18px;
   }
 
   .divider {
     display: flex;
     align-items: center;
     margin: 24px 0;
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 0.8rem;
+    color: var(--slate);
+    font-size: 11px;
   }
 
   .divider::before,
@@ -167,147 +107,142 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: rgba(139, 92, 246, 0.2);
+    background: rgba(136, 146, 176, 0.2);
   }
 
   .divider span {
     padding: 0 16px;
   }
 
-  .oauth-btn {
-    width: 100%;
-    padding: 14px;
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.03);
-    color: var(--white);
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 12px;
-    text-decoration: none;
+  .field {
+    margin-bottom: 16px;
+    text-align: left;
   }
 
-  .oauth-btn:hover {
-    border-color: var(--sky-blue);
-    background: rgba(56, 189, 248, 0.05);
+  .field label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--slate);
+    margin-bottom: 6px;
+    letter-spacing: .4px;
+  }
+
+  .field input {
+    width: 100%;
+    background: rgba(10, 25, 47, 0.6);
+    border: 1px solid rgba(136, 146, 176, 0.35);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--white);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .25s ease, box-shadow .25s ease;
+    font-family: inherit;
+  }
+
+  .field input:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.12);
+  }
+
+  .field input::placeholder {
+    color: #586d8f;
+  }
+
+  .pw-wrap {
+    position: relative;
+  }
+
+  .pw-toggle {
+    position: absolute;
+    right: 12px;
+    top: 36px;
+    font-size: 11px;
+    color: var(--teal);
+    cursor: pointer;
+    user-select: none;
+    background: none;
+    border: none;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    background: var(--teal);
+    color: var(--navy);
+    box-shadow: 0 4px 18px rgba(100, 255, 218, 0.25);
+    transition: all .2s ease;
+    margin-top: 8px;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 6px 24px rgba(100, 255, 218, 0.4);
     transform: translateY(-1px);
   }
 
-  .oauth-btn svg {
-    width: 20px;
-    height: 20px;
+  .btn-primary:active {
+    transform: scale(0.98);
   }
 
-  .auth-footer {
+  .forgot-link {
+    display: block;
+    text-align: right;
+    font-size: 12px;
+    color: var(--teal);
+    text-decoration: none;
+    margin-top: 8px;
+    margin-bottom: 16px;
+  }
+
+  .forgot-link:hover {
+    text-decoration: underline;
+  }
+
+  .register-link {
     text-align: center;
+    font-size: 13px;
+    color: var(--slate);
     margin-top: 24px;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.85rem;
   }
 
-  .auth-footer a {
-    color: var(--sky-blue);
+  .register-link a {
+    color: var(--teal);
     text-decoration: none;
     font-weight: 600;
-    transition: color 0.3s ease;
   }
 
-  .auth-footer a:hover {
-    color: var(--violet);
-  }
+  @media (max-width: 480px) {
+    .card {
+      padding: 32px 24px 24px;
+      margin-top: 80px;
+    }
 
-  .alert {
-    padding: 14px 18px;
-    border-radius: 14px;
-    margin-bottom: 20px;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .alert-danger {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
-  }
-
-  .alert-success {
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.2);
-    color: #86efac;
-  }
-
-  .alert-warning {
-    background: rgba(234, 179, 8, 0.1);
-    border: 1px solid rgba(234, 179, 8, 0.2);
-    color: #fde047;
+    .oauth-buttons {
+      flex-direction: column;
+    }
   }
 </style>
+{% endblock %}
 
-<div class="auth-page">
-  <div class="auth-card">
-    <!-- Logo -->
-     <a href="{{ url_for('main.index') }}" class="nav-item {% if request.endpoint == 'main.index' %}active{% endif %}">
-        <div class="auth-logo">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-        </div>
-    </a>
+{% block content %}
+<div class="card">
+  <!-- Logo -->
+  <div class="auth-logo">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+    </svg>
+  </div>
 
-    <h1 class="auth-title">HuTech</h1>
-    <p class="auth-subtitle">Connectez-vous à la communauté tech</p>
+  <h1 class="auth-title">HuTech</h1>
+  <p class="auth-subtitle">Connecte-toi à la communauté tech</p>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <form method="POST" action="{{ url_for('main.login') }}">
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input 
-          type="email" 
-          name="email" 
-          class="form-input" 
-          placeholder="votre@email.com"
-          required
-        >
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Mot de passe</label>
-        <input 
-          type="password" 
-          name="password" 
-          class="form-input" 
-          placeholder="••••••••"
-          required
-        >
-      </div>
-
-      <button type="submit" class="auth-btn btn-primary">
-        Se connecter
-      </button>
-    </form>
-
-    <div class="divider">
-      <span>ou continuer avec</span>
-    </div>
-
+  <!-- OAuth -->
+  <div class="oauth-buttons">
     <a href="{{ url_for('main.google_login') }}" class="oauth-btn">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -317,19 +252,60 @@
       </svg>
       Google
     </a>
-
     <a href="{{ url_for('main.github_login') }}" class="oauth-btn">
       <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
       </svg>
       GitHub
     </a>
+  </div>
 
-    <div class="auth-footer">
-      Pas encore de compte ? 
-      <a href="{{ url_for('main.register') }}">S'inscrire</a>
+  <div class="divider">
+    <span>ou avec email</span>
+  </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('main.login') }}">
+    <div class="field">
+      <label>Email</label>
+      <input type="email" name="email" placeholder="toi@exemple.com" required>
     </div>
+
+    <div class="field pw-wrap">
+      <label>Mot de passe</label>
+      <input type="password" name="password" id="loginPassword" placeholder="••••••••" required>
+      <button type="button" class="pw-toggle" onclick="togglePw()">Afficher</button>
+    </div>
+
+    <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+
+    <button type="submit" class="btn-primary">Se connecter</button>
+  </form>
+
+  <div class="register-link">
+    Pas encore membre ? <a href="{{ url_for('main.register') }}">Rejoindre HuTech</a>
   </div>
 </div>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function togglePw() {
+    const input = document.getElementById('loginPassword');
+    const btn = input.nextElementSibling;
+    const isPw = input.type === 'password';
+    input.type = isPw ? 'text' : 'password';
+    btn.textContent = isPw ? 'Masquer' : 'Afficher';
+  }
+</script>
+{% endblock %}

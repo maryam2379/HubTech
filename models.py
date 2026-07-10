@@ -273,6 +273,10 @@ class Post(db.Model):
     # Contenu
     content = db.Column(db.Text, nullable=False)
 
+    # Type de post (VRAI CHAMP, pas une property)
+    post_type = db.Column(db.String(50), default='article')
+    # article, tutorial, question, show_and_tell, project
+
     # Média
     image_url = db.Column(db.String(500))
 
@@ -294,32 +298,42 @@ class Post(db.Model):
 
     tags = db.relationship('Tag', secondary=post_tags, backref='posts')
 
+    # ============================================
+    # PROPERTIES (calculées uniquement)
+    # ============================================
+
     @property
     def title(self):
-        return (self.content[:80] + '…') if self.content and len(self.content) > 80 else (self.content or 'Publication')
+        """Génère un titre à partir du contenu"""
+        if self.content and len(self.content) > 80:
+            return self.content[:80] + '…'
+        return self.content or 'Publication'
 
     @property
     def excerpt(self):
-        return (self.content[:160] + '…') if self.content and len(self.content) > 160 else self.content
+        """Génère un extrait à partir du contenu"""
+        if self.content and len(self.content) > 160:
+            return self.content[:160] + '…'
+        return self.content
 
     @property
     def cover_image(self):
+        """Alias pour image_url"""
         return self.image_url
 
     @property
-    def post_type(self):
-        return 'article'
-
-    @property
     def status(self):
+        """Tous les posts sont publiés par défaut"""
         return 'published'
 
     @property
     def comments_count(self):
+        """Compte les commentaires"""
         return self.comments.count()
 
     @property
     def views_count(self):
+        """À implémenter plus tard"""
         return 0
 
     def __repr__(self):

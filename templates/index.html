@@ -1,6 +1,600 @@
 {% extends "base.html" %}
 
-{% block title %} Accueil {% endblock %}
+{% block title %}HuTech - Feed{% endblock %}
+
+{% block extra_css %}
+<style>
+  .feed-container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 16px 100px;
+  }
+
+  .feed-header {
+    margin-bottom: 24px;
+  }
+
+  .feed-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .feed-header p {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+  }
+
+  .create-post-btn {
+    width: 100%;
+    padding: 16px 20px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    text-decoration: none;
+  }
+
+  .create-post-btn:hover {
+    border-color: var(--sky-blue);
+    color: var(--sky-blue);
+  }
+
+  .create-post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sky-blue), var(--violet));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: white;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .create-post-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .feed-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .feed-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .filter-chip:hover {
+    border-color: var(--sky-blue);
+    color: var(--sky-blue);
+  }
+
+  .filter-chip.active {
+    background: linear-gradient(135deg, var(--sky-blue), var(--violet));
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+  }
+
+  /* Post Card */
+  .post-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .post-card:hover {
+    border-color: rgba(56, 189, 248, 0.2);
+    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.1);
+  }
+
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .post-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(139, 92, 246, 0.3);
+  }
+
+  .post-meta {
+    flex: 1;
+  }
+
+  .post-author {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .post-author:hover {
+    color: var(--sky-blue);
+  }
+
+  .post-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .post-role {
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    border-radius: 10px;
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--sky-blue);
+  }
+
+  .post-time {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .post-menu {
+    color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .post-menu:hover {
+    color: var(--white);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .post-content {
+    margin-bottom: 14px;
+  }
+
+  .post-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .post-image {
+    width: 100%;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    object-fit: cover;
+    max-height: 400px;
+  }
+
+  .post-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .post-tag {
+    padding: 4px 12px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--violet);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+  }
+
+  .post-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(139, 92, 246, 0.1);
+  }
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    background: none;
+  }
+
+  .action-btn:hover {
+    background: rgba(56, 189, 248, 0.08);
+    color: var(--sky-blue);
+  }
+
+  .action-btn.liked {
+    color: #ef4444;
+  }
+
+  .action-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Loader */
+  .feed-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .feed-loader.hidden {
+    display: none;
+  }
+
+  .loader-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(139, 92, 246, 0.2);
+    border-top-color: var(--sky-blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Fin du feed */
+  .feed-end {
+    text-align: center;
+    padding: 32px;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.9rem;
+  }
+
+  .feed-end.hidden {
+    display: none;
+  }
+
+  /* État vide */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .empty-state svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .empty-state h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 12px;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  @media (max-width: 640px) {
+    .feed-container {
+      padding: 16px 12px 100px;
+    }
+
+    .post-card {
+      padding: 16px;
+      border-radius: 20px;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
+<div class="feed-container">
+  <!-- Header -->
+  <div class="feed-header">
+    <h1>Feed</h1>
+    <p>Découvrez les dernières publications tech</p>
+  </div>
+
+  <!-- Bouton créer post -->
+  {% if user %}
+  <a href="#" class="create-post-btn">
+    <div class="create-post-avatar">
+      {% if user.avatar and user.avatar != 'default-avatar.png' %}
+        <img src="{{ url_for('static', filename='images/' + user.avatar) }}" alt="">
+      {% else %}
+        {{ user.display_name[0] if user.display_name else user.username[0] }}
+      {% endif %}
+    </div>
+    <span>Partager un projet, un article ou une question...</span>
+  </a>
+  {% endif %}
+
+  <!-- Filtres -->
+  <div class="feed-filters">
+    <button class="filter-chip active" data-filter="all">Tout</button>
+    <button class="filter-chip" data-filter="article">Articles</button>
+    <button class="filter-chip" data-filter="project">Projets</button>
+    <button class="filter-chip" data-filter="question">Questions</button>
+    <button class="filter-chip" data-filter="tutorial">Tutoriels</button>
+  </div>
+
+  <!-- Container des posts -->
+  <div id="posts-container">
+    <!-- Les posts seront injectés ici par JS -->
+  </div>
+
+  <!-- Loader -->
+  <div id="feed-loader" class="feed-loader hidden">
+    <div class="loader-spinner"></div>
+    <span>Chargement...</span>
+  </div>
+
+  <!-- Fin du feed -->
+  <div id="feed-end" class="feed-end hidden">
+    Vous avez tout vu ! 🎉
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // ============================================
+  // SCROLL INFINI - FEED AJAX
+  // ============================================
+  
+  let currentPage = 1;
+  let isLoading = false;
+  let hasMorePosts = true;
+  let currentFilter = 'all';
+
+  const postsContainer = document.getElementById('posts-container');
+  const loader = document.getElementById('feed-loader');
+  const feedEnd = document.getElementById('feed-end');
+
+  // Template HTML pour un post
+  function createPostHTML(post) {
+    const tagsHTML = post.tags.map(tag => 
+      `<span class="post-tag">#${tag.name}</span>`
+    ).join('');
+
+    const imageHTML = post.cover_image ? 
+      `<img src="/static/images/${post.cover_image}" alt="" class="post-image">` : '';
+
+    return `
+      <article class="post-card" data-post-id="${post.id}">
+        <div class="post-header">
+          <img src="/static/images/${post.author.avatar}" 
+               alt="${post.author.username}" class="post-avatar"
+               onerror="this.src='/static/images/default-avatar.png'">
+          <div class="post-meta">
+            <a href="/u/${post.author.username}" class="post-author">
+              ${post.author.display_name}
+            </a>
+            <div class="post-info">
+              <span class="post-role">${post.author.role}</span>
+              <span class="post-time">${post.created_at}</span>
+            </div>
+          </div>
+          <div class="post-menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="5" r="1"/>
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="12" cy="19" r="1"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="post-content">
+          <p class="post-text">${post.excerpt}</p>
+          ${imageHTML}
+        </div>
+
+        <div class="post-tags">
+          ${tagsHTML}
+        </div>
+
+        <div class="post-actions">
+          <button class="action-btn" onclick="likePost(${post.id}, this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            <span class="like-count">${post.likes_count}</span>
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            ${post.comments_count}
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+            Partager
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            ${post.views_count}
+          </button>
+        </div>
+      </article>
+    `;
+  }
+
+  // Charger les posts
+  async function loadPosts(page = 1, append = true) {
+    if (isLoading || !hasMorePosts) return;
+    
+    isLoading = true;
+    loader.classList.remove('hidden');
+
+    try {
+      const response = await fetch(`/api/feed?page=${page}&per_page=10`);
+      const data = await response.json();
+
+      if (!append) {
+        postsContainer.innerHTML = '';
+      }
+
+      if (data.posts.length === 0 && page === 1) {
+        postsContainer.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <h3>Aucun post pour l'instant</h3>
+            <p>Soyez le premier à partager quelque chose !</p>
+          </div>
+        `;
+      } else {
+        data.posts.forEach(post => {
+          postsContainer.insertAdjacentHTML('beforeend', createPostHTML(post));
+        });
+      }
+
+      hasMorePosts = data.has_next;
+      currentPage = data.current_page;
+
+      if (!hasMorePosts && data.posts.length > 0) {
+        feedEnd.classList.remove('hidden');
+      }
+
+    } catch (error) {
+      console.error('Erreur chargement feed:', error);
+    } finally {
+      isLoading = false;
+      loader.classList.add('hidden');
+    }
+  }
+
+  // Like un post
+  async function likePost(postId, btn) {
+    try {
+      const response = await fetch(`/api/posts/${postId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        btn.classList.toggle('liked', data.liked);
+        btn.querySelector('.like-count').textContent = data.likes_count;
+      }
+    } catch (error) {
+      console.error('Erreur like:', error);
+    }
+  }
+
+  // Détection du scroll
+  function handleScroll() {
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const threshold = document.body.offsetHeight - 500;
+
+    if (scrollPosition >= threshold && !isLoading && hasMorePosts) {
+      loadPosts(currentPage + 1, true);
+    }
+  }
+
+  // Throttle pour optimiser les performances
+  let scrollTimeout;
+  window.addEventListener('scroll', () => {
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(handleScroll, 100);
+  });
+
+  // Filtres
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      
+      currentFilter = this.dataset.filter;
+      currentPage = 1;
+      hasMorePosts = true;
+      feedEnd.classList.add('hidden');
+      
+      // Recharger avec le nouveau filtre
+      loadPosts(1, false);
+    });
+  });
+
+  // Chargement initial
+  loadPosts(1, false);
+</script>
 {% endblock %}
