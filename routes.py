@@ -85,7 +85,7 @@ def register():
                 flash(error, 'danger')
             return render_template('auth/register.html')
 
-        # --- Création de l'utilisateur ---
+               # --- Création de l'utilisateur ---
         new_user = User(
             username=username,
             email=email,
@@ -98,6 +98,9 @@ def register():
             experience_level=request.form.get('experience_level', 'junior')
         )
 
+        db.session.add(new_user)
+        db.session.flush()  # Génère l'ID de l'utilisateur pour les relations
+
         # Gestion des intérêts (tags)
         interests_raw = request.form.get('interests', '')
         if interests_raw:
@@ -107,10 +110,17 @@ def register():
                 if not tag:
                     tag = Tag(name=interest_name.capitalize(), slug=interest_name.lower())
                     db.session.add(tag)
+                    db.session.flush()  # Génère l'ID du tag
                 new_user.skills.append(tag)
 
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.commit()
+            flash('Compte créé avec succès ! Connectez-vous.', 'success')
+            return redirect(url_for('main.login'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erreur lors de la création du compte : {str(e)}', 'danger')
+            return render_template('auth/register.html')
 
         flash('Compte créé avec succès ! Connectez-vous.', 'success')
         return redirect(url_for('main.login'))
@@ -181,7 +191,8 @@ def google_login():
         flash("La connexion Google n'est pas configurée.", 'warning')
         return redirect(url_for('main.login'))
 
-    redirect_uri = url_for('main.google_callback', _external=True)
+    # FORCER localhost pour matcher la config Google Cloud Console
+    redirect_uri = "http://localhost:5000/auth/google/callback"
 
     google_auth_url = (
         "https://accounts.google.com/o/oauth2/v2/auth"
@@ -211,7 +222,7 @@ def google_callback():
 
     # --- Échanger le code contre un token ---
     token_url = "https://oauth2.googleapis.com/token"
-    redirect_uri = url_for('main.google_callback', _external=True)
+    redirect_uri = "http://localhost:5000/auth/google/callback"
 
     token_data = {
         'code': code,
@@ -301,7 +312,8 @@ def github_login():
         flash("La connexion GitHub n'est pas configurée.", 'warning')
         return redirect(url_for('main.login'))
 
-    redirect_uri = url_for('main.github_callback', _external=True)
+    # FORCER localhost pour matcher la config GitHub OAuth App
+    redirect_uri = "http://localhost:5000/auth/github/callback"
 
     github_auth_url = (
         "https://github.com/login/oauth/authorize"
@@ -329,12 +341,13 @@ def github_callback():
 
     # --- Échanger le code contre un token ---
     token_url = "https://github.com/login/oauth/access_token"
+    redirect_uri = "http://localhost:5000/auth/github/callback"
 
     token_data = {
         'client_id': current_app.config.get('GITHUB_CLIENT_ID'),
         'client_secret': current_app.config.get('GITHUB_CLIENT_SECRET'),
         'code': code,
-        'redirect_uri': url_for('main.github_callback', _external=True)
+        'redirect_uri': redirect_uri
     }
 
     token_response = requests.post(
