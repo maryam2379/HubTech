@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HubTech</title>
+    <title>{% block title %}HubTech{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
     <style>
         /* ===== RESET & BASE ===== */
@@ -22,9 +22,73 @@
             line-height: 1.6;
         }
 
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ===== FLASH MESSAGES ===== */
+        .flash-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .flash-message {
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            animation: slideDown 0.4s ease, fadeOut 0.4s ease 4s forwards;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+        }
+
+        .flash-success {
+            background: #ecfdf5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
+        }
+
+        .flash-danger {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+        }
+
+        .flash-warning {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            color: #92400e;
+        }
+
+        .flash-info {
+            background: #eff6ff;
+            border: 1px solid #93c5fd;
+            color: #1e40af;
+        }
+
         /* ===== CONTAINER ===== */
         .container {
-            max-width: 600px;
+            max-width: 680px;
             margin: 0 auto;
             padding: 20px 20px 100px 20px;
         }
@@ -93,251 +157,18 @@
             font-weight: 600;
             font-size: 1rem;
             cursor: pointer;
+            overflow: hidden;
         }
 
-        /* ===== STATUT / ACTIVITÉ ===== */
-        .status-bar {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 16px 20px;
-            margin: 20px 0 24px 0;
-            box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
-            border: 1px solid rgba(10, 25, 47, 0.06);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-bar .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #64FFDA;
-            flex-shrink: 0;
-            animation: pulse-dot 2s infinite;
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.85); }
-        }
-
-        .status-bar p {
-            font-size: 0.9rem;
-            color: #8892B0;
-        }
-
-        .status-bar p strong {
-            color: #0A192F;
-            font-weight: 600;
-        }
-
-        /* ===== POSTS ===== */
-        .post {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 20px 22px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
-            border: 1px solid rgba(10, 25, 47, 0.06);
-            transition: box-shadow 0.2s;
-        }
-
-        .post:hover {
-            box-shadow: 0 4px 12px rgba(10, 25, 47, 0.06);
-        }
-
-        .post-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .post-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #64FFDA;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #0A192F;
-            flex-shrink: 0;
-        }
-
-        .post-meta {
-            flex: 1;
-        }
-
-        .post-meta .name {
-            font-weight: 600;
-            color: #0A192F;
-            font-size: 0.95rem;
-        }
-
-        .post-meta .time {
-            font-size: 0.8rem;
-            color: #8892B0;
-        }
-
-        .post-content {
-            color: #0A192F;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 12px;
-        }
-
-        .post-content .hashtag {
-            color: #64FFDA;
-            font-weight: 500;
-        }
-
-        .post-actions {
-            display: flex;
-            gap: 20px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(10, 25, 47, 0.04);
-        }
-
-        .post-actions button {
-            background: none;
-            border: none;
-            color: #8892B0;
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        .post-actions button:hover {
-            color: #64FFDA;
-            background: rgba(100, 255, 218, 0.08);
-        }
-
-        .post-actions button .count {
-            font-weight: 500;
-        }
-
-        /* ===== SECTION CHAT (mini) ===== */
-        .chat-section {
-            margin-top: 32px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(10, 25, 47, 0.06);
-        }
-
-        .chat-section h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #0A192F;
-            margin-bottom: 16px;
-        }
-
-        .chat-message {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 12px;
-            padding: 12px 16px;
-            background: #ffffff;
-            border-radius: 16px;
-            border: 1px solid rgba(10, 25, 47, 0.04);
-        }
-
-        .chat-message .chat-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #0A192F;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .chat-message .msg-content {
-            flex: 1;
-        }
-
-        .chat-message .msg-content .sender {
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #0A192F;
-        }
-
-        .chat-message .msg-content .sender span {
-            font-weight: 400;
-            color: #8892B0;
-            font-size: 0.75rem;
-        }
-
-        .chat-message .msg-content p {
-            font-size: 0.9rem;
-            color: #0A192F;
-            margin-top: 2px;
-        }
-
-        /* ===== ACTIVITY LOG (inspiré de votre capture) ===== */
-        .activity-log {
-            margin-top: 32px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(10, 25, 47, 0.06);
-        }
-
-        .activity-log h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #0A192F;
-            margin-bottom: 12px;
-        }
-
-        .activity-item {
-            padding: 12px 16px;
-            background: #ffffff;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            border: 1px solid rgba(10, 25, 47, 0.04);
-            font-size: 0.85rem;
-            color: #8892B0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .activity-item .icon {
-            color: #64FFDA;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .activity-item strong {
-            color: #0A192F;
-            font-weight: 600;
-        }
-
-        .activity-item .code {
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.75rem;
-            background: rgba(10, 25, 47, 0.04);
-            padding: 2px 10px;
-            border-radius: 6px;
-            color: #0A192F;
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         /* =========================================================
-               BOTTOM NAV — GLASS + THÈME BLANC
-            ========================================================= */
-
+           BOTTOM NAV — GLASS + THÈME BLANC
+        ========================================================= */
         .bottom-nav {
             position: fixed;
             bottom: 20px;
@@ -370,7 +201,6 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
-        /* --- Nav items --- */
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -447,7 +277,6 @@
             color: #0A192F;
         }
 
-        /* --- Bouton logo central --- */
         .nav-logo {
             display: flex;
             align-items: center;
@@ -479,7 +308,6 @@
             transform: scale(1.05);
         }
 
-        /* --- Badge de notification sur la nav --- */
         .nav-item .badge {
             position: absolute;
             top: 0px;
@@ -542,10 +370,6 @@
                 padding: 0px 5px;
             }
 
-            .post {
-                padding: 16px 18px;
-            }
-
             .header h1 {
                 font-size: 1.25rem;
             }
@@ -556,18 +380,32 @@
                 display: block;
             }
         }
+
+        {% block extra_css %}{% endblock %}
     </style>
+<base target="_blank">
 </head>
 <body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
 
+    {% block content %}{% endblock %}
 
     <!-- =========================================================
          BOTTOM NAV — GLASS + THÈME BLANC
-         ========================================================= -->
+    ========================================================= -->
     <nav class="bottom-nav" role="navigation">
-
-        <!-- Accueil (actif) -->
-        <a href="{{ url_for('main.index') }}" class="nav-item {% if request.endpoint == 'main.index' %}active{% endif %}" class="nav-item active">
+        <a href="{{ url_for('main.index') }}" class="nav-item {% if request.endpoint == 'main.index' %}active{% endif %}">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
@@ -575,8 +413,7 @@
             <span class="nav-label">Accueil</span>
         </a>
 
-        <!-- Explorer -->
-        <a href="#" class="nav-item">
+        <a href="{{ url_for('main.explore') }}" class="nav-item {% if request.endpoint == 'main.explore' %}active{% endif %}">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -584,47 +421,40 @@
             <span class="nav-label">Explorer</span>
         </a>
 
-        <!-- Logo central -->
-        <button class="nav-logo" onclick="alert('TechSocial · Hub')" aria-label="TechSocial Hub">
+        <button class="nav-logo" onclick="window.location.href='{{ url_for('main.create_post') }}'" aria-label="Créer un post">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
         </button>
 
-        <!-- Notifications -->
-        <a href="#" class="nav-item">
+        <a href="{{ url_for('main.notifications') }}" class="nav-item {% if request.endpoint == 'main.notifications' %}active{% endif %}">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
             </svg>
-            <span class="badge">3</span>
             <span class="nav-label">Alertes</span>
         </a>
 
-        <!-- Profil -->
-        <a href="#" class="nav-item">
+        {% if user %}
+        <a href="{{ url_for('main.profile', username=user.username) }}" class="nav-item {% if request.endpoint == 'main.profile' %}active{% endif %}">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
             </svg>
             <span class="nav-label">Profil</span>
         </a>
+        {% else %}
+        <a href="{{ url_for('main.login') }}" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+            </svg>
+            <span class="nav-label">Connexion</span>
+        </a>
+        {% endif %}
     </nav>
 
-    <!-- Script : gestion de l'état actif -->
-    <script>
-        (function() {
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    // si c'est un lien, on empêche le rechargement pour la démo
-                    if (this.tagName === 'A') e.preventDefault();
-                    navItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-        })();
-    </script>
-
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

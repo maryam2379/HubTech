@@ -1,0 +1,798 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier le profil - HuTech{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== HEADER ===== */
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0 20px;
+    border-bottom: 1px solid rgba(10, 25, 47, 0.08);
+    margin-bottom: 20px;
+  }
+
+  .back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid rgba(10, 25, 47, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0A192F;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .back-btn:hover {
+    background: #F1F5F9;
+    transform: translateX(-2px);
+  }
+
+  .back-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .page-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0A192F;
+  }
+
+  /* ===== COVER & AVATAR SECTION ===== */
+  .cover-section {
+    position: relative;
+    margin-bottom: 60px;
+  }
+
+  .cover-image {
+    width: 100%;
+    height: 180px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #0A192F 0%, #112240 50%, #0d2038 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover-image::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(100,255,218,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cover-image::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  .cover-image:hover .cover-overlay {
+    opacity: 1;
+  }
+
+  .cover-overlay svg {
+    width: 32px;
+    height: 32px;
+    color: white;
+  }
+
+  .avatar-edit-wrap {
+    position: absolute;
+    bottom: -50px;
+    left: 20px;
+  }
+
+  .avatar-edit {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid #F8FAFC;
+    background: linear-gradient(135deg, #64FFDA, #0A192F);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 2rem;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+
+  .avatar-edit img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-edit-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+
+  .avatar-edit:hover .avatar-edit-overlay {
+    opacity: 1;
+  }
+
+  .avatar-edit-overlay svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+  }
+
+  /* ===== FORM SECTIONS ===== */
+  .form-section {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
+    border: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0A192F;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title svg {
+    width: 20px;
+    height: 20px;
+    color: #64FFDA;
+  }
+
+  /* ===== FORM FIELDS ===== */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 640px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+  }
+
+  .field-hint {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 4px;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    background: #F8FAFC;
+    border: 1.5px solid rgba(10, 25, 47, 0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #0A192F;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.25s ease;
+    font-family: inherit;
+  }
+
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: #64FFDA;
+    box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.15);
+    background: white;
+  }
+
+  .field input::placeholder,
+  .field textarea::placeholder {
+    color: #94a3b8;
+  }
+
+  .field textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .field select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+  }
+
+  /* ===== TOGGLE SWITCH ===== */
+  .toggle-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .toggle-field:last-child {
+    border-bottom: none;
+  }
+
+  .toggle-info h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0A192F;
+    margin-bottom: 2px;
+  }
+
+  .toggle-info p {
+    font-size: 0.8rem;
+    color: #94a3b8;
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    background: #e2e8f0;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch.active {
+    background: #64FFDA;
+  }
+
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .toggle-switch.active::after {
+    transform: translateX(22px);
+  }
+
+  .toggle-switch input {
+    display: none;
+  }
+
+  /* ===== SOCIAL LINKS ===== */
+  .social-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .social-link:last-child {
+    border-bottom: none;
+  }
+
+  .social-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .social-icon.github { background: #24292e; }
+  .social-icon.linkedin { background: #0a66c2; }
+  .social-icon.twitter { background: #1da1f2; }
+  .social-icon.website { background: #0A192F; }
+
+  .social-icon svg {
+    width: 20px;
+    height: 20px;
+    color: white;
+  }
+
+  .social-input {
+    flex: 1;
+  }
+
+  .social-input input {
+    width: 100%;
+    background: #F8FAFC;
+    border: 1.5px solid rgba(10, 25, 47, 0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #0A192F;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.25s ease;
+    font-family: inherit;
+  }
+
+  .social-input input:focus {
+    border-color: #64FFDA;
+    box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.15);
+    background: white;
+  }
+
+  /* ===== SKILLS TAGS ===== */
+  .skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .skill-tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: rgba(100, 255, 218, 0.1);
+    color: #0A192F;
+    border: 1.5px solid rgba(100, 255, 218, 0.25);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .skill-tag:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+  }
+
+  .skill-tag .remove {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .skill-input-wrap {
+    display: flex;
+    gap: 8px;
+  }
+
+  .skill-input-wrap input {
+    flex: 1;
+    background: #F8FAFC;
+    border: 1.5px solid rgba(10, 25, 47, 0.1);
+    border-radius: 12px;
+    padding: 10px 14px;
+    color: #0A192F;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.25s ease;
+    font-family: inherit;
+  }
+
+  .skill-input-wrap input:focus {
+    border-color: #64FFDA;
+    box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.15);
+    background: white;
+  }
+
+  .skill-add-btn {
+    padding: 10px 18px;
+    background: #0A192F;
+    color: #64FFDA;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  .skill-add-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(10, 25, 47, 0.2);
+  }
+
+  /* ===== SAVE BUTTON ===== */
+  .save-section {
+    position: sticky;
+    bottom: 90px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 16px 0;
+  }
+
+  .btn-save {
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #0A192F, #112240);
+    color: #64FFDA;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(10, 25, 47, 0.2);
+  }
+
+  .btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(10, 25, 47, 0.3);
+  }
+
+  .btn-cancel {
+    padding: 14px 24px;
+    background: white;
+    color: #64748b;
+    border: 1.5px solid rgba(10, 25, 47, 0.1);
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  .btn-cancel:hover {
+    background: #F1F5F9;
+    color: #0A192F;
+  }
+
+  /* ===== FILE INPUT HIDDEN ===== */
+  .file-input {
+    display: none;
+  }
+
+  @media (max-width: 480px) {
+    .cover-image {
+      height: 140px;
+      border-radius: 16px;
+    }
+
+    .avatar-edit {
+      width: 80px;
+      height: 80px;
+      font-size: 1.5rem;
+    }
+
+    .avatar-edit-wrap {
+      bottom: -40px;
+    }
+
+    .form-section {
+      padding: 18px;
+      border-radius: 16px;
+    }
+
+    .save-section {
+      bottom: 80px;
+    }
+
+    .btn-save, .btn-cancel {
+      padding: 12px 20px;
+      font-size: 0.85rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <button class="back-btn" onclick="history.back()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </button>
+    <h1 class="page-title">Modifier le profil</h1>
+  </div>
+
+  <form method="POST" action="{{ url_for('main.edit_profile') }}" enctype="multipart/form-data">
+
+    <!-- Cover & Avatar -->
+    <div class="cover-section">
+      <div class="cover-image">
+        <div class="cover-overlay" onclick="document.getElementById('banner').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+      </div>
+      <input type="file" id="banner" name="banner" class="file-input" accept="image/*">
+
+      <div class="avatar-edit-wrap">
+        <div class="avatar-edit">
+          {% if user.avatar and user.avatar != 'default-avatar.png' %}
+            <img src="{{ url_for('static', filename='images/' + user.avatar) }}" id="avatarPreview">
+          {% else %}
+            <span id="avatarInitial">{{ user.display_name[0] if user.display_name else user.username[0] }}</span>
+          {% endif %}
+          <div class="avatar-edit-overlay" onclick="document.getElementById('avatar').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <input type="file" id="avatar" name="avatar" class="file-input" accept="image/*" onchange="previewAvatar(this)">
+    </div>
+
+    <!-- Basic Info -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Informations de base
+      </h2>
+
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label">Nom complet</label>
+          <input type="text" name="display_name" value="{{ user.display_name or '' }}" placeholder="Jean Dupont">
+        </div>
+
+        <div class="field">
+          <label class="field-label">Nom d'utilisateur</label>
+          <input type="text" value="{{ user.username }}" disabled style="background: #e2e8f0; color: #64748b;">
+          <p class="field-hint">Le nom d'utilisateur ne peut pas être modifié</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Bio</label>
+        <textarea name="bio" placeholder="Parlez-nous de vous, vos projets, vos passions...">{{ user.bio or '' }}</textarea>
+        <p class="field-hint">Maximum 500 caractères</p>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Titre / Headline</label>
+        <input type="text" name="headline" value="{{ user.headline or '' }}" placeholder="ex: Full-Stack Dev | React & Python">
+      </div>
+    </div>
+
+    <!-- Professional Info -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        Professionnel
+      </h2>
+
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label">Rôle</label>
+          <select name="role">
+            <option value="developer" {% if user.role == 'developer' %}selected{% endif %}>Développeur</option>
+            <option value="designer" {% if user.role == 'designer' %}selected{% endif %}>Designer</option>
+            <option value="data_scientist" {% if user.role == 'data_scientist' %}selected{% endif %}>Data Scientist</option>
+            <option value="devops" {% if user.role == 'devops' %}selected{% endif %}>DevOps</option>
+            <option value="product_manager" {% if user.role == 'product_manager' %}selected{% endif %}>Product Manager</option>
+            <option value="cybersecurity" {% if user.role == 'cybersecurity' %}selected{% endif %}>Cybersécurité</option>
+            <option value="hardware" {% if user.role == 'hardware' %}selected{% endif %}>Hardware / IoT</option>
+            <option value="other" {% if user.role == 'other' %}selected{% endif %}>Autre</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Niveau d'expérience</label>
+          <select name="experience_level">
+            <option value="junior" {% if user.experience_level == 'junior' %}selected{% endif %}>Junior</option>
+            <option value="mid" {% if user.experience_level == 'mid' %}selected{% endif %}>Intermédiaire</option>
+            <option value="senior" {% if user.experience_level == 'senior' %}selected{% endif %}>Senior</option>
+            <option value="lead" {% if user.experience_level == 'lead' %}selected{% endif %}>Lead</option>
+            <option value="principal" {% if user.experience_level == 'principal' %}selected{% endif %}>Principal</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Localisation</label>
+        <input type="text" name="location" value="{{ user.location or '' }}" placeholder="ex: Paris, France">
+      </div>
+    </div>
+
+    <!-- Social Links -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        Liens sociaux
+      </h2>
+
+      <div class="social-link">
+        <div class="social-icon github">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        </div>
+        <div class="social-input">
+          <input type="url" name="github_url" value="{{ user.github_url or '' }}" placeholder="https://github.com/votreprofil">
+        </div>
+      </div>
+
+      <div class="social-link">
+        <div class="social-icon linkedin">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </div>
+        <div class="social-input">
+          <input type="url" name="linkedin_url" value="{{ user.linkedin_url or '' }}" placeholder="https://linkedin.com/in/votreprofil">
+        </div>
+      </div>
+
+      <div class="social-link">
+        <div class="social-icon twitter">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+        </div>
+        <div class="social-input">
+          <input type="url" name="twitter_url" value="{{ user.twitter_url or '' }}" placeholder="https://twitter.com/votreprofil">
+        </div>
+      </div>
+
+      <div class="social-link">
+        <div class="social-icon website">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <div class="social-input">
+          <input type="url" name="website_url" value="{{ user.website_url or '' }}" placeholder="https://votresite.com">
+        </div>
+      </div>
+
+      <div class="social-link">
+        <div class="social-icon website" style="background: #8b5cf6;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+            <polyline points="13 2 13 9 20 9"/>
+          </svg>
+        </div>
+        <div class="social-input">
+          <input type="url" name="portfolio_url" value="{{ user.portfolio_url or '' }}" placeholder="https://votreportfolio.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- Availability -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Disponibilité
+      </h2>
+
+      <div class="toggle-field">
+        <div class="toggle-info">
+          <h4>Ouvert aux opportunités</h4>
+          <p>Les recruteurs pourront vous contacter</p>
+        </div>
+        <label class="toggle-switch {% if user.is_available %}active{% endif %}">
+          <input type="checkbox" name="is_available" {% if user.is_available %}checked{% endif %} onchange="this.parentElement.classList.toggle('active')">
+        </label>
+      </div>
+
+      <div class="field" style="margin-top: 16px;">
+        <label class="field-label">Statut de disponibilité</label>
+        <select name="availability_status">
+          <option value="not_available" {% if user.availability_status == 'not_available' %}selected{% endif %}>Non disponible</option>
+          <option value="open_to_work" {% if user.availability_status == 'open_to_work' %}selected{% endif %}>En recherche d'emploi</option>
+          <option value="open_to_collaborate" {% if user.availability_status == 'open_to_collaborate' %}selected{% endif %}>Ouvert à la collaboration</option>
+          <option value="hiring" {% if user.availability_status == 'hiring' %}selected{% endif %}>Je recrute</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Save Buttons -->
+    <div class="save-section">
+      <a href="{{ url_for('main.profile', username=user.username) }}" class="btn-cancel">Annuler</a>
+      <button type="submit" class="btn-save">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Enregistrer
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const preview = document.getElementById('avatarPreview');
+        const initial = document.getElementById('avatarInitial');
+        if (preview) {
+          preview.src = e.target.result;
+        } else if (initial) {
+          initial.style.display = 'none';
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.id = 'avatarPreview';
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          initial.parentElement.insertBefore(img, initial);
+        }
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+</script>
+{% endblock %}

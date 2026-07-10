@@ -25,14 +25,30 @@ class Config:
     # Base de données
     SQLALCHEMY_DATABASE_URI = get_database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
+
+    # Connection pooling - CRITICAL for Neon/cloud PostgreSQL
+    # Prevents "SSL connection has been closed unexpectedly"
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,        # Vérifie la connexion avant chaque requête
+        'pool_recycle': 300,          # Recycle les connexions après 5 min
+        'pool_size': 5,               # Nombre de connexions permanentes
+        'max_overflow': 10,           # Connexions supplémentaires si besoin
+        'connect_args': {
+            'connect_timeout': 10,
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5,
+        }
+    }
+
     # Sécurité
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
-    
+
     # Upload
     UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'static/images')
     MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
-    
+
     # Email
     MAIL_SERVER = os.getenv('MAIL_SERVER')
     MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
@@ -40,7 +56,7 @@ class Config:
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
-    
+
     # OAuth
     GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
     GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')

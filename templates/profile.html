@@ -1,0 +1,862 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.display_name or profile_user.username }} - HuTech{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== PROFILE HEADER ===== */
+  .profile-header {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .profile-banner {
+    width: 100%;
+    height: 160px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #0A192F 0%, #112240 50%, #0d2038 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(100,255,218,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .profile-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .profile-avatar-wrap {
+    position: relative;
+    margin-top: -50px;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid #F8FAFC;
+    background: linear-gradient(135deg, #64FFDA, #0A192F);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 2rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .btn {
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: #0A192F;
+    color: #64FFDA;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(10, 25, 47, 0.2);
+  }
+
+  .btn-outline {
+    background: white;
+    color: #0A192F;
+    border: 1.5px solid rgba(10, 25, 47, 0.15);
+  }
+
+  .btn-outline:hover {
+    border-color: #64FFDA;
+    background: rgba(100, 255, 218, 0.05);
+  }
+
+  .btn-following {
+    background: rgba(100, 255, 218, 0.1);
+    color: #0A192F;
+    border: 1.5px solid #64FFDA;
+  }
+
+  /* ===== PROFILE INFO ===== */
+  .profile-info {
+    padding: 16px 20px 0;
+  }
+
+  .profile-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #0A192F;
+    margin-bottom: 2px;
+  }
+
+  .profile-username {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  .profile-bio {
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .profile-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #64748b;
+  }
+
+  .profile-meta-item svg {
+    width: 16px;
+    height: 16px;
+    color: #94a3b8;
+  }
+
+  .profile-meta-item a {
+    color: #64FFDA;
+    font-weight: 500;
+  }
+
+  .profile-meta-item a:hover {
+    text-decoration: underline;
+  }
+
+  /* ===== STATS ===== */
+  .profile-stats {
+    display: flex;
+    gap: 24px;
+    padding: 16px 0;
+    border-top: 1px solid rgba(10, 25, 47, 0.08);
+    border-bottom: 1px solid rgba(10, 25, 47, 0.08);
+    margin-bottom: 16px;
+  }
+
+  .stat-item {
+    text-align: center;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .stat-item:hover {
+    opacity: 0.7;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0A192F;
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  /* ===== TABS ===== */
+  .profile-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    background: white;
+    border-radius: 16px;
+    padding: 4px;
+    box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
+    border: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: none;
+    background: none;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .tab-btn:hover {
+    background: #F1F5F9;
+    color: #0A192F;
+  }
+
+  .tab-btn.active {
+    background: #0A192F;
+    color: #64FFDA;
+  }
+
+  .tab-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ===== TAB CONTENT ===== */
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== POSTS GRID ===== */
+  .posts-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .profile-post {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
+    border: 1px solid rgba(10, 25, 47, 0.06);
+    transition: all 0.3s ease;
+  }
+
+  .profile-post:hover {
+    box-shadow: 0 4px 20px rgba(10, 25, 47, 0.08);
+  }
+
+  .post-header-small {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .post-header-small img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .post-header-small .name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #0A192F;
+  }
+
+  .post-header-small .time {
+    font-size: 0.75rem;
+    color: #94a3b8;
+  }
+
+  .profile-post .content {
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .profile-post .post-image {
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  .profile-post .post-footer {
+    display: flex;
+    gap: 16px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .post-footer-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .post-footer-item:hover {
+    color: #0A192F;
+  }
+
+  .post-footer-item svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* ===== PROJECTS ===== */
+  .projects-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .project-card {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
+    border: 1px solid rgba(10, 25, 47, 0.06);
+    transition: all 0.3s ease;
+  }
+
+  .project-card:hover {
+    box-shadow: 0 4px 20px rgba(10, 25, 47, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .project-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #0A192F;
+    margin-bottom: 4px;
+  }
+
+  .project-desc {
+    font-size: 0.85rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .project-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .tech-tag {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: rgba(100, 255, 218, 0.1);
+    color: #0A192F;
+    border: 1px solid rgba(100, 255, 218, 0.2);
+  }
+
+  .project-links {
+    display: flex;
+    gap: 12px;
+  }
+
+  .project-link {
+    font-size: 0.8rem;
+    color: #64FFDA;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ===== ABOUT ===== */
+  .about-section {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
+    border: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .about-section h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0A192F;
+    margin-bottom: 12px;
+  }
+
+  .about-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .about-item:last-child {
+    border-bottom: none;
+  }
+
+  .about-item svg {
+    width: 20px;
+    height: 20px;
+    color: #64FFDA;
+    flex-shrink: 0;
+  }
+
+  .about-item .label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 2px;
+  }
+
+  .about-item .value {
+    font-size: 0.9rem;
+    color: #0A192F;
+    font-weight: 500;
+  }
+
+  /* ===== EMPTY ===== */
+  .empty-tab {
+    text-align: center;
+    padding: 50px 20px;
+    color: #94a3b8;
+  }
+
+  .empty-tab svg {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .empty-tab h4 {
+    font-size: 1rem;
+    color: #64748b;
+    margin-bottom: 6px;
+  }
+
+  .empty-tab p {
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 480px) {
+    .profile-banner {
+      height: 120px;
+      border-radius: 16px;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      font-size: 1.5rem;
+    }
+
+    .profile-avatar-wrap {
+      margin-top: -40px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      font-size: 0.8rem;
+    }
+
+    .profile-stats {
+      gap: 16px;
+    }
+
+    .tab-btn span {
+      display: none;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <div class="profile-banner"></div>
+
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar">
+        {% if profile_user.avatar and profile_user.avatar != 'default-avatar.png' %}
+          <img src="{{ url_for('static', filename='images/' + profile_user.avatar) }}" alt="{{ profile_user.username }}">
+        {% else %}
+          {{ profile_user.display_name[0] if profile_user.display_name else profile_user.username[0] }}
+        {% endif %}
+      </div>
+
+      <div class="profile-actions">
+        {% if user and user.id != profile_user.id %}
+          {% if is_following %}
+          <form action="{{ url_for('main.unfollow', username=profile_user.username) }}" method="POST" style="display: inline;">
+            <button type="submit" class="btn btn-following">Suivi(e) ✓</button>
+          </form>
+          {% else %}
+          <form action="{{ url_for('main.follow', username=profile_user.username) }}" method="POST" style="display: inline;">
+            <button type="submit" class="btn btn-primary">Suivre</button>
+          </form>
+          {% endif %}
+          <button class="btn btn-outline" onclick="window.location.href='{{ url_for('main.chat', username=profile_user.username) }}'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+        {% elif user and user.id == profile_user.id %}
+          <a href="{{ url_for('main.edit_profile') }}" class="btn btn-outline">Modifier le profil</a>
+        {% else %}
+          <a href="{{ url_for('main.login') }}" class="btn btn-primary">Suivre</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Info -->
+  <div class="profile-info">
+    <div class="profile-name">{{ profile_user.display_name or profile_user.username }}</div>
+    <div class="profile-username">@{{ profile_user.username }}</div>
+
+    {% if profile_user.bio %}
+    <div class="profile-bio">{{ profile_user.bio }}</div>
+    {% endif %}
+
+    <div class="profile-meta">
+      {% if profile_user.headline %}
+      <div class="profile-meta-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        {{ profile_user.headline }}
+      </div>
+      {% endif %}
+
+      {% if profile_user.location %}
+      <div class="profile-meta-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        {{ profile_user.location }}
+      </div>
+      {% endif %}
+
+      {% if profile_user.github_url %}
+      <div class="profile-meta-item">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        <a href="{{ profile_user.github_url }}" target="_blank">GitHub</a>
+      </div>
+      {% endif %}
+
+      {% if profile_user.website_url %}
+      <div class="profile-meta-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        <a href="{{ profile_user.website_url }}" target="_blank">Site web</a>
+      </div>
+      {% endif %}
+
+      <div class="profile-meta-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        A rejoint {{ profile_user.created_at.strftime('%B %Y') }}
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="profile-stats">
+      <div class="stat-item" onclick="switchTab('posts')">
+        <span class="stat-value">{{ profile_user.posts_count or posts|length }}</span>
+        <span class="stat-label">Publications</span>
+      </div>
+      <div class="stat-item" onclick="window.location.href='{{ url_for('main.followers', username=profile_user.username) }}'">
+        <span class="stat-value">{{ profile_user.followers_count or 0 }}</span>
+        <span class="stat-label">Followers</span>
+      </div>
+      <div class="stat-item" onclick="window.location.href='{{ url_for('main.following', username=profile_user.username) }}'">
+        <span class="stat-value">{{ profile_user.following_count or 0 }}</span>
+        <span class="stat-label">Suivis</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ profile_user.projects_count or projects|length }}</span>
+        <span class="stat-label">Projets</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="profile-tabs">
+    <button class="tab-btn active" onclick="switchTab('posts')" data-tab="posts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <line x1="3" y1="9" x2="21" y2="9"/>
+        <line x1="9" y1="21" x2="9" y2="9"/>
+      </svg>
+      <span>Publications</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('projects')" data-tab="projects">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span>Projets</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('about')" data-tab="about">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      <span>À propos</span>
+    </button>
+  </div>
+
+  <!-- Publications Tab -->
+  <div id="tab-posts" class="tab-content active">
+    {% if posts %}
+    <div class="posts-grid">
+      {% for post in posts %}
+      <article class="profile-post">
+        <div class="post-header-small">
+          <img src="{{ url_for('static', filename='images/' + profile_user.avatar) }}" 
+               onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
+          <div>
+            <div class="name">{{ profile_user.display_name or profile_user.username }}</div>
+            <div class="time">{{ post.created_at.strftime('%d %b %Y') }}</div>
+          </div>
+        </div>
+        <div class="content">{{ post.content }}</div>
+        {% if post.cover_image %}
+        <img src="{{ url_for('static', filename='images/' + post.cover_image) }}" class="post-image">
+        {% endif %}
+        <div class="post-footer">
+          <span class="post-footer-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            {{ post.likes_count }}
+          </span>
+          <span class="post-footer-item" onclick="window.location.href='{{ url_for('main.post_detail', post_id=post.id) }}'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            {{ post.comments_count }}
+          </span>
+          <span class="post-footer-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+            Partager
+          </span>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <line x1="3" y1="9" x2="21" y2="9"/>
+        <line x1="9" y1="21" x2="9" y2="9"/>
+      </svg>
+      <h4>Aucune publication</h4>
+      <p>Les posts de {{ profile_user.display_name or profile_user.username }} apparaîtront ici.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Projects Tab -->
+  <div id="tab-projects" class="tab-content">
+    {% if projects %}
+    <div class="projects-list">
+      {% for project in projects %}
+      <div class="project-card" onclick="window.location.href='{{ url_for('main.project_detail', slug=project.slug) }}'">
+        <div class="project-name">{{ project.name }}</div>
+        <div class="project-desc">{{ project.short_description or project.description[:120] }}...</div>
+        {% if project.tech_stack %}
+        <div class="project-tech">
+          {% for tech in project.tech_stack[:4] %}
+          <span class="tech-tag">{{ tech }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div class="project-links">
+          {% if project.github_url %}
+          <a href="{{ project.github_url }}" class="project-link" target="_blank" onclick="event.stopPropagation();">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            Code
+          </a>
+          {% endif %}
+          {% if project.demo_url %}
+          <a href="{{ project.demo_url }}" class="project-link" target="_blank" onclick="event.stopPropagation();">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Démo
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+      </svg>
+      <h4>Aucun projet</h4>
+      <p>Les projets de {{ profile_user.display_name or profile_user.username }} apparaîtront ici.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- About Tab -->
+  <div id="tab-about" class="tab-content">
+    <div class="about-section">
+      <h3>Informations</h3>
+
+      <div class="about-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <div>
+          <div class="label">Rôle</div>
+          <div class="value">{{ profile_user.role or 'Développeur' }}</div>
+        </div>
+      </div>
+
+      <div class="about-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <div>
+          <div class="label">Niveau d'expérience</div>
+          <div class="value">{{ profile_user.experience_level or 'Junior' }}</div>
+        </div>
+      </div>
+
+      {% if profile_user.location %}
+      <div class="about-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <div>
+          <div class="label">Localisation</div>
+          <div class="value">{{ profile_user.location }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if profile_user.linkedin_url %}
+      <div class="about-item">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+        <div>
+          <div class="label">LinkedIn</div>
+          <div class="value"><a href="{{ profile_user.linkedin_url }}" target="_blank" style="color: #64FFDA;">Voir le profil</a></div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if profile_user.portfolio_url %}
+      <div class="about-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        <div>
+          <div class="label">Portfolio</div>
+          <div class="value"><a href="{{ profile_user.portfolio_url }}" target="_blank" style="color: #64FFDA;">{{ profile_user.portfolio_url }}</a></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="about-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <div>
+          <div class="label">Membre depuis</div>
+          <div class="value">{{ profile_user.created_at.strftime('%B %Y') }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function switchTab(tabName) {
+    // Update buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+
+    // Update content
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+    document.getElementById('tab-' + tabName).classList.add('active');
+  }
+</script>
+{% endblock %}
