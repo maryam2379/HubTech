@@ -30,3 +30,6 @@ migrations/
 ### Systèmes d'exploitation ###
 .DS_Store
 Thumbs.db
+
+# fichier image 
+static/images/*

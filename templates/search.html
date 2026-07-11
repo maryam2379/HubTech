@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}{% if query %}Résultats pour "{{ query }}"{% else %}Recherche{% endif %} - HuTech{% endblock %}
+
+{% block extra_css %}
+  .explore-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid rgba(10, 25, 47, 0.08);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin: 20px 0 24px;
+    box-shadow: 0 2px 12px rgba(10, 25, 47, 0.04);
+  }
+
+  .explore-search svg {
+    width: 18px;
+    height: 18px;
+    color: #8892B0;
+    flex-shrink: 0;
+  }
+
+  .explore-search input {
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: #0A192F;
+    width: 100%;
+    background: transparent;
+  }
+
+  .explore-search input::placeholder {
+    color: #94a3b8;
+  }
+
+  .search-section {
+    margin-bottom: 28px;
+  }
+
+  .search-section h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0A192F;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .search-section h2 .count {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64FFDA;
+    background: #0A192F;
+    padding: 2px 9px;
+    border-radius: 20px;
+  }
+
+  /* ===== USERS ===== */
+  .result-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(10, 25, 47, 0.06);
+    text-decoration: none;
+    margin-bottom: 8px;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .result-user:hover {
+    box-shadow: 0 4px 16px rgba(10, 25, 47, 0.06);
+  }
+
+  .result-user img,
+  .result-user .avatar-fallback {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .result-user .avatar-fallback {
+    background: linear-gradient(135deg, #64FFDA, #0A192F);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .result-user .info h3 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0A192F;
+  }
+
+  .result-user .info span {
+    font-size: 0.76rem;
+    color: #94a3b8;
+  }
+
+  .result-user .info p {
+    font-size: 0.76rem;
+    color: #64748b;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 420px;
+  }
+
+  /* ===== POSTS ===== */
+  .result-post {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(10, 25, 47, 0.06);
+    text-decoration: none;
+    margin-bottom: 8px;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .result-post:hover {
+    box-shadow: 0 4px 16px rgba(10, 25, 47, 0.06);
+  }
+
+  .result-post .thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #0A192F, #112240);
+  }
+
+  .result-post .thumb-fallback {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #0A192F, #112240);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .result-post .thumb-fallback svg {
+    width: 22px;
+    height: 22px;
+    color: rgba(100, 255, 218, 0.5);
+  }
+
+  .result-post .content h3 {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #0A192F;
+    margin-bottom: 3px;
+  }
+
+  .result-post .content p {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .result-post .content .meta {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-top: 6px;
+  }
+
+  /* ===== PROJECTS ===== */
+  .result-project {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(10, 25, 47, 0.06);
+    text-decoration: none;
+    margin-bottom: 8px;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .result-project:hover {
+    box-shadow: 0 4px 16px rgba(10, 25, 47, 0.06);
+  }
+
+  .result-project .thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #0A192F, #112240);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .result-project .thumb svg {
+    width: 22px;
+    height: 22px;
+    color: rgba(100, 255, 218, 0.5);
+  }
+
+  .result-project .content h3 {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #0A192F;
+    margin-bottom: 3px;
+  }
+
+  .result-project .content p {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ===== TAGS ===== */
+  .tags-results-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tag-pill {
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1.5px solid transparent;
+  }
+
+  /* ===== EMPTY STATES ===== */
+  .search-empty {
+    text-align: center;
+    padding: 70px 20px;
+    color: #94a3b8;
+  }
+
+  .search-empty svg {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .search-empty h3 {
+    font-size: 1rem;
+    color: #0A192F;
+    margin-bottom: 6px;
+  }
+
+  .search-empty p {
+    font-size: 0.85rem;
+  }
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="header">
+    <h1>Recherche</h1>
+  </div>
+
+  <form action="{{ url_for('main.search') }}" method="GET" class="explore-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" name="q" value="{{ query }}" placeholder="Rechercher des personnes, projets, tags..." autofocus>
+  </form>
+
+  {% if results is none %}
+    <div class="search-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <h3>Trouvez ce que vous cherchez</h3>
+      <p>Tapez un nom, un projet, un tag comme "Python" ou "Flask"...</p>
+    </div>
+
+  {% elif not results.users and not results.posts and not results.projects and not results.tags %}
+    <div class="search-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <h3>Aucun résultat pour "{{ query }}"</h3>
+      <p>Essayez un autre mot-clé ou vérifiez l'orthographe.</p>
+    </div>
+
+  {% else %}
+
+    {% if results.tags %}
+    <div class="search-section">
+      <h2>Tags <span class="count">{{ results.tags|length }}</span></h2>
+      <div class="tags-results-row">
+        {% for tag in results.tags %}
+        <a href="{{ url_for('main.search', q=tag.name) }}" class="tag-pill"
+           style="background: {{ tag.color }}1a; color: {{ tag.color }}; border-color: {{ tag.color }}33;">
+          #{{ tag.name }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if results.users %}
+    <div class="search-section">
+      <h2>Personnes <span class="count">{{ results.users|length }}</span></h2>
+      {% for u in results.users %}
+      <a href="{{ url_for('main.profile', username=u.username) }}" class="result-user">
+        {% if u.avatar and u.avatar != 'default-avatar.png' %}
+          <img src="{{ url_for('static', filename='images/' + u.avatar) }}" alt="{{ u.username }}">
+        {% else %}
+          <div class="avatar-fallback">{{ u.display_name[0] if u.display_name else u.username[0] }}</div>
+        {% endif %}
+        <div class="info">
+          <h3>{{ u.display_name or u.username }}</h3>
+          <span>@{{ u.username }}</span>
+          {% if u.bio %}<p>{{ u.bio }}</p>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if results.projects %}
+    <div class="search-section">
+      <h2>Projets <span class="count">{{ results.projects|length }}</span></h2>
+      {% for project in results.projects %}
+      <a href="{{ url_for('main.project_detail', slug=project.slug) }}" class="result-project">
+        <div class="thumb" {% if project.cover_image %}style="background-image: url('{{ url_for('static', filename='images/' + project.cover_image) }}'); background-size: cover; background-position: center;"{% endif %}>
+          {% if not project.cover_image %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          {% endif %}
+        </div>
+        <div class="content">
+          <h3>{{ project.name }}</h3>
+          <p>{{ project.short_description or project.description }}</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if results.posts %}
+    <div class="search-section">
+      <h2>Publications <span class="count">{{ results.posts|length }}</span></h2>
+      {% for post in results.posts %}
+      <a href="{{ url_for('main.post_detail', post_id=post.id) }}" class="result-post">
+        {% if post.image_url %}
+          <img class="thumb" src="{{ url_for('static', filename='images/' + post.image_url) }}" alt="">
+        {% else %}
+          <div class="thumb-fallback">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+        {% endif %}
+        <div class="content">
+          <h3>{{ post.title }}</h3>
+          <p>{{ post.excerpt }}</p>
+          <div class="meta">{{ post.author.display_name or post.author.username }} · {{ post.likes_count }} likes</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  {% endif %}
+</div>
+{% endblock %}
