@@ -1217,12 +1217,17 @@
       const nameEl = item.querySelector('.story-name');
       const onclickAttr = item.getAttribute('onclick');
       let storyId = null;
+      let storyIds = [];
       if (onclickAttr) {
-        const match = onclickAttr.match(/openStoryViewer\((\d+)\)/);
-        if (match) storyId = match[1];
+        const match = onclickAttr.match(/openStoryViewer\((\d+)(?:,\s*(\[[\d,\s]*\]))?\)/);
+        if (match) {
+          storyId = match[1];
+          storyIds = match[2] ? JSON.parse(match[2]) : [parseInt(match[1])];
+        }
       }
       storyList.push({
         id: storyId,
+        ids: storyIds,
         name: nameEl ? nameEl.textContent.trim() : '',
         avatar: imgEl ? imgEl.src : '',
         element: item
@@ -1230,13 +1235,16 @@
     });
   });
 
-  let currentUserStories = []; // Toutes les stories du user cliqué
+  let currentUserStories = []; // Toutes les stories du user actuellement ouvert
+  let currentUserPointer = 0;  // Index de cet utilisateur dans storyList (pour enchaîner sur le suivant)
 
   function openStoryViewer(storyId, allStoryIds) {
-    currentUserStories = allStoryIds || [storyId];
+    currentUserStories = allStoryIds || [parseInt(storyId)];
     currentStoryIdx = currentUserStories.indexOf(parseInt(storyId));
     if (currentStoryIdx === -1) currentStoryIdx = 0;
-    
+
+    currentUserPointer = storyList.findIndex(u => u.ids.includes(parseInt(storyId)));
+
     const viewer = document.getElementById('storyViewer');
     viewer.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -1280,7 +1288,7 @@
   }
 
   function renderStory(story) {
-    const total = storyList.length;
+    const total = currentUserStories.length;
     const barsContainer = document.getElementById('storyProgressBars');
     barsContainer.innerHTML = '';
     for (let i = 0; i < total; i++) {
@@ -1341,25 +1349,24 @@
       textEl.style.display = 'block';
     }
 
-    document.getElementById('svPrev').style.display = currentStoryIdx > 0 ? 'flex' : 'none';
-    document.getElementById('svNext').style.display = currentStoryIdx < storyList.length - 1 ? 'flex' : 'none';
+    document.getElementById('svPrev').style.display = (currentStoryIdx > 0 || currentUserPointer > 0) ? 'flex' : 'none';
+    document.getElementById('svNext').style.display = 'flex';
 
     clearTimeout(storyAutoTimer);
     storyAutoTimer = setTimeout(() => {
-      if (currentStoryIdx < storyList.length - 1) {
-        storyViewerNext();
-      } else {
-        closeStoryViewer();
-      }
+      storyViewerNext();
     }, 5000);
   }
 
   function storyViewerNext() {
     clearTimeout(storyAutoTimer);
-    if (currentStoryIdx < storyList.length - 1) {
+    if (currentStoryIdx < currentUserStories.length - 1) {
       currentStoryIdx++;
-      const storyId = storyList[currentStoryIdx].id;
-      if (storyId) loadStoryData(storyId);
+      loadStoryData(currentUserStories[currentStoryIdx]);
+    } else if (currentUserPointer < storyList.length - 1) {
+      // Terminé pour cet utilisateur : passer à l'utilisateur suivant
+      const nextUser = storyList[currentUserPointer + 1];
+      openStoryViewer(nextUser.id, nextUser.ids);
     } else {
       closeStoryViewer();
     }
@@ -1369,8 +1376,14 @@
     clearTimeout(storyAutoTimer);
     if (currentStoryIdx > 0) {
       currentStoryIdx--;
-      const storyId = storyList[currentStoryIdx].id;
-      if (storyId) loadStoryData(storyId);
+      loadStoryData(currentUserStories[currentStoryIdx]);
+    } else if (currentUserPointer > 0) {
+      // Revenir à l'utilisateur précédent, sur sa dernière story
+      const prevUser = storyList[currentUserPointer - 1];
+      currentUserStories = prevUser.ids;
+      currentStoryIdx = currentUserStories.length - 1;
+      currentUserPointer -= 1;
+      loadStoryData(currentUserStories[currentStoryIdx]);
     }
   }
 
