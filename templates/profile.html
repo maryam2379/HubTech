@@ -672,7 +672,7 @@
       <article class="profile-post">
         <div class="post-header-small">
           <img src="{{ url_for('static', filename='images/' + profile_user.avatar) }}" 
-               onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
+               onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
           <div>
             <div class="name">{{ profile_user.display_name or profile_user.username }}</div>
             <div class="time">{{ post.created_at.strftime('%d %b %Y') }}</div>

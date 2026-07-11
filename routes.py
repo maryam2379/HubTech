@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app, jsonify, abort
 from db import db
-from models import User, Post, Project, Comment, Tag, Notification, Message, Job, JobApplication, CodeSnippet
+from models import User, Post, Project, Comment, Tag, Notification, Message, Job, JobApplication, CodeSnippet, Story, StoryView
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import requests
 
@@ -43,8 +43,14 @@ def index():
         posts = user.get_feed_posts().limit(20).all()
     else:
         posts = Post.query.order_by(Post.created_at.desc()).limit(10).all()
-    return render_template('index.html', posts=posts, user=user)
-
+    
+    # Récupérer les stories actives (non expirées, dernières 24h)
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    active_stories = Story.query.filter(
+        Story.created_at >= cutoff
+    ).order_by(Story.created_at.desc()).all()
+    
+    return render_template('index.html', posts=posts, user=user, active_stories=active_stories)
 
 # ============================================
 # INSCRIPTION (Register)
@@ -1418,3 +1424,212 @@ def privacy():
 def help_page():
     """Aide / FAQ"""
     return render_template('help.html', user=get_current_user())
+
+
+# ============================================
+# STORIES
+# ============================================
+@main_bp.route('/stories')
+def stories():
+    """Explorer les stories actives"""
+    # Récupérer les stories non expirées des 24 dernières heures
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    active_stories = Story.query.filter(
+        Story.created_at >= cutoff
+    ).order_by(Story.created_at.desc()).all()
+
+    # Grouper par utilisateur
+    stories_by_user = {}
+    for story in active_stories:
+        if story.user_id not in stories_by_user:
+            stories_by_user[story.user_id] = []
+        stories_by_user[story.user_id].append(story)
+
+    return render_template('stories.html', 
+                         stories_by_user=stories_by_user,
+                         user=get_current_user())
+
+
+@main_bp.route('/story/new', methods=['GET', 'POST'])
+@login_required
+def create_story():
+    """Créer une nouvelle story"""
+    if request.method == 'POST':
+        content = request.form.get('content', '').strip()
+        story_type = request.form.get('story_type', 'text')
+        text_color = request.form.get('text_color', '#F8FAFC')
+        bg_style = request.form.get('bg_style', 'bg-gradient-1')
+
+        # Validation
+        if not content and 'image' not in request.files:
+            flash('Veuillez ajouter du contenu à votre story.', 'warning')
+            return redirect(url_for('main.create_story'))
+
+        story = Story(
+            content=content,
+            story_type=story_type,
+            text_color=text_color,
+            bg_style=bg_style,
+            user_id=get_current_user().id
+        )
+
+        # Gestion de l'image
+        if 'image' in request.files:
+            image_file = request.files['image']
+            if image_file.filename:
+                filename = secure_filename(f"story_{get_current_user().id}_{int(datetime.utcnow().timestamp())}_{image_file.filename}")
+                image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                image_file.save(image_path)
+                story.image_url = filename
+                story.story_type = 'image'
+
+        db.session.add(story)
+        db.session.commit()
+
+        flash('Story publiée ! Elle sera visible pendant 24h.', 'success')
+        return redirect(url_for('main.index'))
+
+    return render_template('create_story.html', user=get_current_user())
+
+
+@main_bp.route('/story/<int:story_id>')
+@login_required
+def view_story(story_id):
+    """Voir une story spécifique avec carrousel des stories de l'auteur"""
+    story = Story.query.get_or_404(story_id)
+
+    # Vérifier expiration
+    if story.is_expired:
+        flash('Cette story a expiré.', 'info')
+        return redirect(url_for('main.index'))
+
+    # Enregistrer la vue si ce n'est pas le propriétaire
+    current_user = get_current_user()
+    if current_user.id != story.user_id:
+        existing_view = StoryView.query.filter_by(
+            story_id=story_id,
+            viewer_id=current_user.id
+        ).first()
+
+        if not existing_view:
+            view = StoryView(story_id=story_id, viewer_id=current_user.id)
+            db.session.add(view)
+            story.views_count += 1
+            db.session.commit()
+
+    # Récupérer les stories de l'utilisateur pour le carrousel
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    user_stories_orm = Story.query.filter_by(user_id=story.user_id).filter(
+        Story.created_at >= cutoff
+    ).order_by(Story.created_at.asc()).all()
+
+    # Trouver l'index de la story actuelle
+    current_index = next((i for i, s in enumerate(user_stories_orm) if s.id == story_id), 0)
+
+    # Sérialiser pour le JS (le template story_viewer.html attend du JSON)
+    stories_data = []
+    for s in user_stories_orm:
+        stories_data.append({
+            'id': s.id,
+            'story_type': s.story_type,
+            'content': s.content,
+            'image_url': s.image_url,
+            'bg_style': s.bg_style,
+            'text_color': s.text_color,
+            'views_count': s.views_count,
+            'created_at': s.created_at.strftime('%H:%M'),
+            'author_username': s.user.username,
+            'author_name': s.user.display_name or s.user.username
+        })
+
+    return render_template('story_viewer.html',
+                         story=story,
+                         user_stories=stories_data,
+                         current_index=current_index,
+                         user=current_user)
+
+@main_bp.route('/api/stories/<int:story_id>')
+@login_required
+def api_get_story(story_id):
+    """API pour récupérer les données d'une story (affichage overlay)"""
+    story = Story.query.get_or_404(story_id)
+    current_user = get_current_user()
+
+    if story.is_expired:
+        return jsonify({'error': 'Story expirée'}), 410
+
+    # Marquer comme vue automatiquement
+    if current_user.id != story.user_id:
+        existing_view = StoryView.query.filter_by(
+            story_id=story_id,
+            viewer_id=current_user.id
+        ).first()
+
+        if not existing_view:
+            view = StoryView(story_id=story_id, viewer_id=current_user.id)
+            db.session.add(view)
+            story.views_count += 1
+            db.session.commit()
+
+    return jsonify({
+        'id': story.id,
+        'content': story.content,
+        'story_type': story.story_type,
+        'text_color': story.text_color,
+        'bg_style': story.bg_style,
+        'image': story.image_url,
+        'created_at': story.created_at.isoformat() if story.created_at else None,
+        'views_count': story.views_count,
+        'time_remaining': story.formatted_time_remaining,
+        'user': {
+            'id': story.user.id,
+            'username': story.user.username,
+            'display_name': story.user.display_name,
+            'avatar': story.user.avatar
+        }
+    })
+
+
+@main_bp.route('/api/stories/active')
+def api_active_stories():
+    """API pour récupérer les stories actives"""
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    stories = Story.query.filter(Story.created_at >= cutoff).order_by(Story.created_at.desc()).all()
+
+    stories_data = []
+    for story in stories:
+        stories_data.append({
+            'id': story.id,
+            'author': {
+                'username': story.user.username,
+                'display_name': story.user.display_name or story.user.username,
+                'avatar': story.user.avatar
+            },
+            'story_type': story.story_type,
+            'content': story.content[:100] if story.content else None,
+            'image_url': story.image_url,
+            'bg_style': story.bg_style,
+            'text_color': story.text_color,
+            'views_count': story.views_count,
+            'time_remaining': story.formatted_time_remaining,
+            'created_at': story.created_at.strftime('%H:%M')
+        })
+
+    return jsonify({'stories': stories_data})
+
+
+@main_bp.route('/story/<int:story_id>/delete', methods=['POST'])
+@login_required
+def delete_story(story_id):
+    """Supprimer une story (propriétaire ou admin)"""
+    story = Story.query.get_or_404(story_id)
+    user = get_current_user()
+
+    if story.user_id != user.id and not user.is_admin:
+        abort(403)
+
+    db.session.delete(story)
+    db.session.commit()
+
+    flash('Story supprimée.', 'info')
+    return redirect(url_for('main.index'))

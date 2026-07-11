@@ -1,0 +1,799 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvelle publication - HuTech{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== PAGE HEADER ===== */
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0 20px;
+    border-bottom: 1px solid rgba(10, 25, 47, 0.08);
+    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    background: #F8FAFC;
+    z-index: 50;
+  }
+
+  .back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid rgba(10, 25, 47, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0A192F;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .back-btn:hover {
+    background: #F1F5F9;
+    transform: translateX(-2px);
+  }
+
+  .back-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .page-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0A192F;
+  }
+
+  /* ===== CREATE CARD ===== */
+  .create-card {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(10, 25, 47, 0.04);
+    border: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  /* ===== AUTHOR ROW ===== */
+  .author-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .author-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64FFDA, #0A192F);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .author-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .author-info {
+    flex: 1;
+  }
+
+  .author-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #0A192F;
+    margin-bottom: 2px;
+  }
+
+  .author-username {
+    font-size: 0.8rem;
+    color: #94a3b8;
+  }
+
+  .visibility-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #F1F5F9;
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .visibility-badge:hover {
+    background: #E2E8F0;
+  }
+
+  .visibility-badge svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ===== TEXTAREA ===== */
+  .content-field {
+    margin-bottom: 20px;
+  }
+
+  .content-field textarea {
+    width: 100%;
+    min-height: 200px;
+    border: none;
+    background: transparent;
+    color: #0A192F;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+    padding: 4px 0;
+  }
+
+  .content-field textarea::placeholder {
+    color: #94a3b8;
+  }
+
+  /* ===== TYPE SELECTOR ===== */
+  .type-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .type-chip {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1.5px solid rgba(10, 25, 47, 0.1);
+    background: white;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .type-chip:hover {
+    border-color: #64FFDA;
+    color: #0A192F;
+  }
+
+  .type-chip.active {
+    background: #0A192F;
+    color: #64FFDA;
+    border-color: #0A192F;
+  }
+
+  .type-chip svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* ===== IMAGE PREVIEW ===== */
+  .image-preview-section {
+    margin-bottom: 20px;
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    display: none;
+  }
+
+  .image-preview-section.show {
+    display: block;
+  }
+
+  .image-preview-section img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .remove-image-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .remove-image-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+  }
+
+  .remove-image-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ===== TAGS INPUT ===== */
+  .tags-section {
+    margin-bottom: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .tags-section label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 10px;
+  }
+
+  .tags-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #F8FAFC;
+    border: 1.5px solid rgba(10, 25, 47, 0.1);
+    border-radius: 14px;
+    padding: 8px 14px;
+    transition: all 0.25s ease;
+  }
+
+  .tags-input-wrap:focus-within {
+    border-color: #64FFDA;
+    box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.15);
+    background: white;
+  }
+
+  .tags-input-wrap svg {
+    width: 18px;
+    height: 18px;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+
+  .tags-input-wrap input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #0A192F;
+    font-size: 0.9rem;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .tags-input-wrap input::placeholder {
+    color: #94a3b8;
+  }
+
+  .tags-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .tag-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: rgba(100, 255, 218, 0.1);
+    color: #0A192F;
+    border: 1.5px solid rgba(100, 255, 218, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: popIn 0.25s ease;
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .tag-pill .remove-tag {
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    color: #64748b;
+    transition: color 0.2s;
+  }
+
+  .tag-pill .remove-tag:hover {
+    color: #ef4444;
+  }
+
+  /* ===== ACTION BAR ===== */
+  .action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid rgba(10, 25, 47, 0.06);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .action-left {
+    display: flex;
+    gap: 8px;
+  }
+
+  .media-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: #F1F5F9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #64748b;
+  }
+
+  .media-btn:hover {
+    background: rgba(100, 255, 218, 0.15);
+    color: #0A192F;
+    transform: translateY(-2px);
+  }
+
+  .media-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .media-btn.photo:hover { color: #10b981; }
+  .media-btn.code:hover { color: #8b5cf6; }
+
+  .char-count {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-right: 12px;
+  }
+
+  .char-count.warning {
+    color: #f59e0b;
+  }
+
+  .char-count.danger {
+    color: #ef4444;
+  }
+
+  .submit-btn {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #0A192F, #112240);
+    color: #64FFDA;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(10, 25, 47, 0.3);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .submit-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ===== FILE INPUT HIDDEN ===== */
+  .file-input {
+    display: none;
+  }
+
+  /* ===== TIPS ===== */
+  .tips-section {
+    margin-top: 24px;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, rgba(100, 255, 218, 0.05), rgba(139, 92, 246, 0.05));
+    border-radius: 16px;
+    border: 1px solid rgba(100, 255, 218, 0.1);
+  }
+
+  .tips-section h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0A192F;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tips-section h4 svg {
+    width: 16px;
+    height: 16px;
+    color: #64FFDA;
+  }
+
+  .tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .tips-list li {
+    font-size: 0.8rem;
+    color: #64748b;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tips-list li::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #64FFDA;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 480px) {
+    .create-card {
+      padding: 18px;
+      border-radius: 20px;
+    }
+
+    .content-field textarea {
+      min-height: 160px;
+      font-size: 1rem;
+    }
+
+    .type-selector {
+      gap: 6px;
+    }
+
+    .type-chip {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    .action-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .action-left {
+      justify-content: center;
+    }
+
+    .submit-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .char-count {
+      margin-right: 0;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <button type="button" class="back-btn" onclick="history.back()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </button>
+    <h1 class="page-title">Nouvelle publication</h1>
+  </div>
+
+  <form method="POST" action="{{ url_for('main.create_post') }}" enctype="multipart/form-data" id="postForm">
+    <div class="create-card">
+      <!-- Author Row -->
+      <div class="author-row">
+        <div class="author-avatar">
+          {% if user.avatar and user.avatar != 'default-avatar.png' %}
+            <img src="{{ url_for('static', filename='images/' + user.avatar) }}" alt="{{ user.username }}">
+          {% else %}
+            {{ user.display_name[0] if user.display_name else user.username[0] }}
+          {% endif %}
+        </div>
+        <div class="author-info">
+          <div class="author-name">{{ user.display_name or user.username }}</div>
+          <div class="author-username">@{{ user.username }}</div>
+        </div>
+        <button type="button" class="visibility-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Public
+        </button>
+      </div>
+
+      <!-- Type Selector -->
+      <div class="type-selector">
+        <button type="button" class="type-chip active" data-type="article" onclick="selectType(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Article
+        </button>
+        <button type="button" class="type-chip" data-type="tutorial" onclick="selectType(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+          Tutoriel
+        </button>
+        <button type="button" class="type-chip" data-type="question" onclick="selectType(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Question
+        </button>
+        <button type="button" class="type-chip" data-type="show_and_tell" onclick="selectType(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          Show & Tell
+        </button>
+        <button type="button" class="type-chip" data-type="project" onclick="selectType(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          Projet
+        </button>
+      </div>
+      <input type="hidden" name="post_type" id="postTypeInput" value="article">
+
+      <!-- Content -->
+      <div class="content-field">
+        <textarea name="content" id="postContent" placeholder="Quoi de neuf ? Partagez votre pensée, votre code, votre projet..." required oninput="updateCharCount()"></textarea>
+      </div>
+
+      <!-- Image Preview -->
+      <div class="image-preview-section" id="imagePreviewSection">
+        <img id="imagePreview" src="" alt="Aperçu">
+        <button type="button" class="remove-image-btn" onclick="removeImage()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tags -->
+      <div class="tags-section">
+        <label>Tags (séparés par des virgules)</label>
+        <div class="tags-input-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+          <input type="text" id="tagsInput" placeholder="python, flask, react, ai..." onkeydown="handleTagInput(event)">
+        </div>
+        <div class="tags-display" id="tagsDisplay"></div>
+        <input type="hidden" name="tags" id="tagsHiddenInput" value="">
+      </div>
+
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <div class="action-left">
+          <button type="button" class="media-btn photo" onclick="document.getElementById('imageInput').click()" title="Ajouter une image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </button>
+          <button type="button" class="media-btn code" onclick="insertCodeBlock()" title="Insérer un bloc de code">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="char-count" id="charCount">0 / 2000</span>
+          <button type="submit" class="submit-btn" id="submitBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            Publier
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <input type="file" id="imageInput" name="image" class="file-input" accept="image/*" onchange="previewImage(this)">
+  </form>
+
+  <!-- Tips -->
+  <div class="tips-section">
+    <h4>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      Conseils pour un bon post
+    </h4>
+    <ul class="tips-list">
+      <li>Soyez clair et concis dans votre message</li>
+      <li>Ajoutez des tags pertinents pour être découvert</li>
+      <li>Une image vaut mille mots — illustrez votre propos</li>
+      <li>Partagez du code avec des explications contextuelles</li>
+      <li>Restez bienveillant et constructif dans vos échanges</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // ===== TYPE SELECTOR =====
+  function selectType(btn) {
+    document.querySelectorAll('.type-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('postTypeInput').value = btn.dataset.type;
+
+    // Update placeholder based on type
+    const textarea = document.getElementById('postContent');
+    const placeholders = {
+      article: "Quoi de neuf ? Partagez votre pensée, votre code, votre projet...",
+      tutorial: "Décrivez votre tutoriel étape par étape...",
+      question: "Posez votre question technique ici...",
+      show_and_tell: "Présentez ce que vous avez construi...",
+      project: "Parlez-nous de votre projet, sa stack, ses défis..."
+    };
+    textarea.placeholder = placeholders[btn.dataset.type] || placeholders.article;
+  }
+
+  // ===== IMAGE PREVIEW =====
+  function previewImage(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewSection = document.getElementById('imagePreviewSection');
+        const previewImg = document.getElementById('imagePreview');
+        previewImg.src = e.target.result;
+        previewSection.classList.add('show');
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function removeImage() {
+    const input = document.getElementById('imageInput');
+    const previewSection = document.getElementById('imagePreviewSection');
+    const previewImg = document.getElementById('imagePreview');
+    input.value = '';
+    previewImg.src = '';
+    previewSection.classList.remove('show');
+  }
+
+  // ===== TAGS =====
+  let tags = [];
+
+  function handleTagInput(event) {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      const input = event.target;
+      const value = input.value.trim().replace(/,$/, '');
+      if (value && !tags.includes(value.toLowerCase())) {
+        tags.push(value.toLowerCase());
+        renderTags();
+      }
+      input.value = '';
+    }
+  }
+
+  function renderTags() {
+    const display = document.getElementById('tagsDisplay');
+    const hiddenInput = document.getElementById('tagsHiddenInput');
+    display.innerHTML = tags.map((tag, index) => `
+      <span class="tag-pill">
+        #${tag}
+        <span class="remove-tag" onclick="removeTag(${index})">&times;</span>
+      </span>
+    `).join('');
+    hiddenInput.value = tags.join(',');
+  }
+
+  function removeTag(index) {
+    tags.splice(index, 1);
+    renderTags();
+  }
+
+  // ===== CHARACTER COUNT =====
+  function updateCharCount() {
+    const textarea = document.getElementById('postContent');
+    const countEl = document.getElementById('charCount');
+    const submitBtn = document.getElementById('submitBtn');
+    const length = textarea.value.length;
+    const max = 2000;
+
+    countEl.textContent = `${length} / ${max}`;
+    countEl.classList.remove('warning', 'danger');
+
+    if (length > max * 0.9) {
+      countEl.classList.add('danger');
+    } else if (length > max * 0.75) {
+      countEl.classList.add('warning');
+    }
+
+    submitBtn.disabled = length === 0 || length > max;
+  }
+
+  // ===== CODE BLOCK INSERTION =====
+  function insertCodeBlock() {
+    const textarea = document.getElementById('postContent');
+    const codeBlock = "\n\`\`\`python\n# Votre code ici\n\`\`\`\n";
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    textarea.value = text.substring(0, start) + codeBlock + text.substring(end);
+    textarea.focus();
+    textarea.setSelectionRange(start + codeBlock.length, start + codeBlock.length);
+    updateCharCount();
+  }
+
+  // ===== FORM VALIDATION =====
+  document.getElementById('postForm').addEventListener('submit', function(e) {
+    const content = document.getElementById('postContent').value.trim();
+    if (!content) {
+      e.preventDefault();
+      document.getElementById('postContent').focus();
+      return false;
+    }
+  });
+</script>
+{% endblock %}

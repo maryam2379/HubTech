@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Story - {{ story.user.display_name or story.user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .story-viewer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .story-viewer-container {
+    width: 100%;
+    max-width: 500px;
+    height: 85vh;
+    max-height: 900px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Progress bars */
+  .story-progress-bars {
+    display: flex;
+    gap: 6px;
+    padding: 16px 16px 0;
+    z-index: 10;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    width: 0%;
+    background: #F8FAFC;
+    border-radius: 3px;
+    animation: progressFill 5s linear forwards;
+  }
+  @keyframes progressFill { to { width: 100%; } }
+
+  /* Story card - CADRE AGRANDI */
+  .story-card {
+    flex: 1;
+    margin: 16px;
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(100,255,218,0.15),
+      0 25px 80px rgba(0,0,0,0.6),
+      0 0 60px rgba(100,255,218,0.08);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .story-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 5;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+  }
+
+  .story-card-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #64FFDA;
+  }
+  .story-card-name { font-weight: 700; font-size: 0.9rem; color: white; }
+  .story-card-time { font-size: 0.75rem; color: rgba(255,255,255,0.7); }
+
+  .story-card-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px 24px;
+    position: relative;
+  }
+
+  .story-card-bg {
+    position: absolute;
+    inset: 0;
+    background: {{ story.bg_style|default('linear-gradient(135deg, #0A192F, #112240)') }};
+  }
+
+  .story-card-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: {{ story.text_color|default('#F8FAFC') }};
+    text-align: center;
+    line-height: 1.5;
+    word-break: break-word;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    z-index: 2;
+  }
+
+  .story-card-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Navigation */
+  .story-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+  }
+  .story-nav:hover { background: rgba(255,255,255,0.3); }
+  .story-nav.prev { left: -60px; }
+  .story-nav.next { right: -60px; }
+
+  .story-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+    z-index: 20;
+  }
+  .story-close:hover { background: rgba(255,255,255,0.3); }
+
+  @media (max-width: 640px) {
+    .story-nav.prev { left: 8px; }
+    .story-nav.next { right: 8px; }
+    .story-viewer-container { max-width: 100%; height: 100vh; max-height: none; }
+    .story-card { margin: 0; border-radius: 0; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="story-viewer-overlay">
+  <div class="story-viewer-container">
+    <!-- Progress bars -->
+    <div class="story-progress-bars">
+      <div class="progress-bar"><div class="fill"></div></div>
+    </div>
+
+    <!-- Story Card -->
+    <div class="story-card">
+      <div class="story-card-header">
+        {% if story.user.avatar and story.user.avatar != 'default-avatar.png' %}
+          <img class="story-card-avatar" src="{{ url_for('static', filename='images/' + story.user.avatar) }}" alt="{{ story.user.username }}">
+        {% else %}
+          <div class="story-card-avatar" style="background: linear-gradient(135deg, #64FFDA, #0A192F); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+            {{ story.user.display_name[0] if story.user.display_name else story.user.username[0] }}
+          </div>
+        {% endif %}
+        <div>
+          <div class="story-card-name">{{ story.user.display_name or story.user.username }}</div>
+          <div class="story-card-time">{{ story.created_at.strftime('%Hh%M') }}</div>
+        </div>
+      </div>
+
+      <div class="story-card-content">
+        <div class="story-card-bg"></div>
+
+        {% if story.story_type == 'image' and story.image %}
+          <img class="story-card-image" src="{{ url_for('static', filename='images/' + story.image) }}" alt="">
+          {% if story.content %}
+            <div class="story-card-text" style="position: absolute; bottom: 80px; left: 24px; right: 24px; font-size: 1.2rem; background: rgba(10,25,47,0.6); backdrop-filter: blur(10px); padding: 16px 20px; border-radius: 16px;">
+              {{ story.content }}
+            </div>
+          {% endif %}
+        {% elif story.story_type == 'code' %}
+          <div style="background: #0d1117; border-radius: 16px; padding: 20px; width: 100%; max-height: 60%; overflow: auto; border: 1px solid rgba(100,255,218,0.1); z-index: 2;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <span style="width:10px;height:10px;border-radius:50%;background:#ff5f56;"></span>
+              <span style="width:10px;height:10px;border-radius:50%;background:#ffbd2e;"></span>
+              <span style="width:10px;height:10px;border-radius:50%;background:#27c93f;"></span>
+              <span style="color:#8b949e;font-size:0.75rem;margin-left:8px;">story.py</span>
+            </div>
+            <pre style="margin:0;font-family:'SF Mono','Fira Code',monospace;font-size:0.85rem;line-height:1.6;color:#c9d1d9;"><code>{{ story.content }}</code></pre>
+          </div>
+        {% else %}
+          <div class="story-card-text">{{ story.content }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Navigation (si tu veux passer à la story suivante) -->
+    {% if next_story %}
+    <a href="{{ url_for('main.view_story', story_id=next_story.id) }}" class="story-nav next">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
+    {% endif %}
+  </div>
+
+  <a href="{{ url_for('main.index') }}" class="story-close">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </a>
+</div>
+{% endblock %}

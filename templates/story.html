@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}Stories - HuTech{% endblock %}
+
+{% block extra_css %}
+<style>
+  .stories-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 20px;
+    border-bottom: 1px solid rgba(10, 25, 47, 0.08);
+    margin-bottom: 20px;
+  }
+
+  .stories-page-header h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #0A192F;
+  }
+
+  .create-story-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #0A192F, #112240);
+    color: #64FFDA;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+
+  .create-story-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(10, 25, 47, 0.2);
+  }
+
+  .create-story-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* User stories row */
+  .user-stories-row {
+    margin-bottom: 28px;
+  }
+
+  .user-stories-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .user-stories-header img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #64FFDA;
+  }
+
+  .user-stories-header .avatar-fallback {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64FFDA, #0A192F);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.75rem;
+    border: 2px solid #64FFDA;
+  }
+
+  .user-stories-header span {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #0A192F;
+  }
+
+  .user-stories-header .time {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  /* Stories grid */
+  .stories-grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+
+  .stories-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .story-thumb {
+    width: 110px;
+    height: 190px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 2px solid transparent;
+  }
+
+  .story-thumb:hover {
+    transform: scale(1.05);
+    border-color: #64FFDA;
+    box-shadow: 0 8px 30px rgba(100, 255, 218, 0.2);
+  }
+
+  .story-thumb .thumb-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .story-thumb .thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(transparent 40%, rgba(10,25,47,0.9));
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 12px;
+  }
+
+  .story-thumb .thumb-type {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(10,25,47,0.6);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .story-thumb .thumb-type svg {
+    width: 14px;
+    height: 14px;
+    color: #64FFDA;
+  }
+
+  .story-thumb .thumb-text {
+    font-size: 0.75rem;
+    color: #F8FAFC;
+    font-weight: 500;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .story-thumb .thumb-views {
+    font-size: 0.65rem;
+    color: rgba(248,250,252,0.6);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Background gradient classes */
+  .bg-gradient-1 { background: linear-gradient(135deg, #0A192F, #112240); }
+  .bg-gradient-2 { background: linear-gradient(135deg, #1a1a2e, #16213e); }
+  .bg-gradient-3 { background: linear-gradient(135deg, #0f3460, #16213e); }
+  .bg-gradient-4 { background: linear-gradient(135deg, #1a1a2e, #0f3460); }
+  .bg-gradient-5 { background: linear-gradient(135deg, #16213e, #0A192F); }
+  .bg-gradient-6 { background: linear-gradient(135deg, #0d1b2a, #1b263b); }
+
+  /* Empty state */
+  .stories-empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: #94a3b8;
+  }
+
+  .stories-empty svg {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+  }
+
+  .stories-empty h3 {
+    font-size: 1.1rem;
+    color: #0A192F;
+    margin-bottom: 8px;
+  }
+
+  .stories-empty p {
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+  }
+
+  .stories-empty a {
+    display: inline-block;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, #0A192F, #112240);
+    color: #64FFDA;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .stories-empty a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(10, 25, 47, 0.2);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="stories-page-header">
+    <h1>Stories</h1>
+    <a href="{{ url_for('main.create_story') }}" class="create-story-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Créer
+    </a>
+  </div>
+
+  {% if stories_by_user %}
+    {% for user_id, user_stories in stories_by_user.items() %}
+    {% set first_story = user_stories[0] %}
+    <div class="user-stories-row">
+      <div class="user-stories-header">
+        {% if first_story.user.avatar and first_story.user.avatar != 'default-avatar.png' %}
+          <img src="{{ url_for('static', filename='images/' + first_story.user.avatar) }}" alt="{{ first_story.user.username }}">
+        {% else %}
+          <div class="avatar-fallback">{{ first_story.user.display_name[0] if first_story.user.display_name else first_story.user.username[0] }}</div>
+        {% endif %}
+        <span>{{ first_story.user.display_name or first_story.user.username }}</span>
+        <span class="time">{{ first_story.created_at.strftime('%H:%M') }}</span>
+      </div>
+
+      <div class="stories-grid">
+        {% for story in user_stories %}
+        <div class="story-thumb" onclick="window.location.href='{{ url_for('main.view_story', story_id=story.id) }}'">
+          {% if story.story_type == 'image' and story.image_url %}
+            <div class="thumb-bg" style="background-image: url('{{ url_for('static', filename='images/' + story.image_url) }}')"></div>
+          {% else %}
+            <div class="thumb-bg {{ story.bg_style }}"></div>
+          {% endif %}
+          <div class="thumb-overlay">
+            <div class="thumb-type">
+              {% if story.story_type == 'text' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+              {% elif story.story_type == 'image' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              {% elif story.story_type == 'code' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 18 22 12 16 6"/>
+                  <polyline points="8 6 2 12 8 18"/>
+                </svg>
+              {% endif %}
+            </div>
+            {% if story.content %}
+              <div class="thumb-text">{{ story.content[:60] }}{% if story.content|length > 60 %}...{% endif %}</div>
+            {% endif %}
+            <div class="thumb-views">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              {{ story.views_count }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="stories-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="8" y1="15" x2="16" y2="15"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
+      <h3>Aucune story active</h3>
+      <p>Soyez le premier à partager une story avec la communauté !</p>
+      <a href="{{ url_for('main.create_story') }}">Créer ma story</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

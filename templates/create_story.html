@@ -1,0 +1,786 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvelle Story - HuTech{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== FULL-SCREEN LAYOUT ===== */
+  .story-creator {
+    position: fixed;
+    inset: 0;
+    background: #0A192F;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ===== TOP BAR ===== */
+  .story-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    z-index: 10;
+  }
+
+  .story-top-bar .back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #F8FAFC;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .story-top-bar .back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .story-top-bar .back-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .story-top-bar .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+  }
+
+  .story-top-bar .user-pill img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #64FFDA;
+  }
+
+  .story-top-bar .user-pill .avatar-fallback {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64FFDA, #0A192F);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    border: 2px solid #64FFDA;
+  }
+
+  .story-top-bar .user-pill span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #F8FAFC;
+  }
+
+  /* ===== CANVAS AREA ===== */
+  .story-canvas {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+
+  .story-phone {
+    width: 100%;
+    max-width: 500px;        
+    height: 100%;
+    max-height: 900px;
+    background: linear-gradient(180deg, #112240 0%, #0A192F 100%);
+    border-radius: 32px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(100, 255, 218, 0.15),
+      0 25px 80px rgba(0, 0, 0, 0.5),
+      0 0 60px rgba(100, 255, 218, 0.05);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Progress bar */
+  .story-progress {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    gap: 6px;
+    z-index: 5;
+  }
+
+  .story-progress-bar {
+    flex: 1;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .story-progress-bar .fill {
+    height: 100%;
+    width: 0%;
+    background: #F8FAFC;
+    border-radius: 3px;
+    animation: progressFill 5s linear forwards;
+  }
+
+  @keyframes progressFill {
+    to { width: 100%; }
+  }
+
+  /* Story content area */
+  .story-content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Background patterns */
+  .story-bg-pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image:
+      radial-gradient(circle at 20% 50%, #64FFDA 1px, transparent 1px),
+      radial-gradient(circle at 80% 20%, #a78bfa 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* Text story */
+  .story-text-display {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #F8FAFC;
+    text-align: center;
+    line-height: 1.5;
+    word-break: break-word;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+  }
+
+  .story-text-display.has-image {
+    position: absolute;
+    bottom: 80px;
+    left: 24px;
+    right: 24px;
+    font-size: 1.2rem;
+    background: rgba(10, 25, 47, 0.6);
+    backdrop-filter: blur(10px);
+    padding: 16px 20px;
+    border-radius: 16px;
+  }
+
+  /* Image story */
+  .story-image-display {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .story-image-display img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Code story */
+  .story-code-display {
+    background: #0d1117;
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    max-height: 60%;
+    overflow: auto;
+    border: 1px solid rgba(100, 255, 218, 0.1);
+    z-index: 2;
+  }
+
+  .story-code-display pre {
+    margin: 0;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #c9d1d9;
+  }
+
+  .story-code-display .code-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .story-code-display .code-header .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .story-code-display .code-header .dot.red { background: #ff5f56; }
+  .story-code-display .code-header .dot.yellow { background: #ffbd2e; }
+  .story-code-display .code-header .dot.green { background: #27c93f; }
+
+  /* Poll story */
+  .story-poll-display {
+    width: 100%;
+    z-index: 2;
+  }
+
+  .story-poll-display h3 {
+    font-size: 1.3rem;
+    color: #F8FAFC;
+    text-align: center;
+    margin-bottom: 24px;
+    font-weight: 700;
+  }
+
+  .poll-option-preview {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    color: #F8FAFC;
+    font-size: 0.95rem;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+  }
+
+  /* Empty state */
+  .story-empty-state {
+    text-align: center;
+    color: rgba(248, 250, 252, 0.3);
+  }
+
+  .story-empty-state svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  .story-empty-state p {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  /* ===== BOTTOM TOOLBAR ===== */
+  .story-toolbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Mode selector */
+  .mode-selector {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .mode-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    background: rgba(10, 25, 47, 0.6);
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(248, 250, 252, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mode-btn:hover {
+    background: rgba(100, 255, 218, 0.1);
+    border-color: rgba(100, 255, 218, 0.3);
+    color: #64FFDA;
+  }
+
+  .mode-btn.active {
+    background: #64FFDA;
+    border-color: #64FFDA;
+    color: #0A192F;
+    box-shadow: 0 0 20px rgba(100, 255, 218, 0.3);
+  }
+
+  .mode-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Input area */
+  .story-input-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .story-text-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 14px 20px;
+    color: #F8FAFC;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.25s ease;
+    font-family: inherit;
+    backdrop-filter: blur(10px);
+  }
+
+  .story-text-input::placeholder {
+    color: rgba(248, 250, 252, 0.35);
+  }
+
+  .story-text-input:focus {
+    border-color: #64FFDA;
+    background: rgba(100, 255, 218, 0.05);
+    box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.1);
+  }
+
+  .story-send-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64FFDA, #0A192F);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0A192F;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    box-shadow: 0 4px 20px rgba(100, 255, 218, 0.25);
+  }
+
+  .story-send-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 30px rgba(100, 255, 218, 0.4);
+  }
+
+  .story-send-btn:active {
+    transform: scale(0.95);
+  }
+
+  .story-send-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* ===== COLOR PICKER ===== */
+  .color-picker {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 0;
+  }
+
+  .color-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .color-dot:hover {
+    transform: scale(1.15);
+  }
+
+  .color-dot.active {
+    border-color: #F8FAFC;
+    box-shadow: 0 0 0 2px #0A192F, 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+
+  .color-dot.active::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  /* ===== BACKGROUND SELECTOR ===== */
+  .bg-selector {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 0;
+    scrollbar-width: none;
+  }
+
+  .bg-selector::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bg-option {
+    width: 60px;
+    height: 80px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bg-option:hover {
+    transform: scale(1.05);
+  }
+
+  .bg-option.active {
+    border-color: #64FFDA;
+    box-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+  }
+
+  /* Gradient backgrounds */
+  .bg-gradient-1 { background: linear-gradient(135deg, #0A192F, #112240); }
+  .bg-gradient-2 { background: linear-gradient(135deg, #1a1a2e, #16213e); }
+  .bg-gradient-3 { background: linear-gradient(135deg, #0f3460, #16213e); }
+  .bg-gradient-4 { background: linear-gradient(135deg, #1a1a2e, #0f3460); }
+  .bg-gradient-5 { background: linear-gradient(135deg, #16213e, #0A192F); }
+  .bg-gradient-6 { background: linear-gradient(135deg, #0d1b2a, #1b263b); }
+
+  /* ===== FILE INPUT ===== */
+  .file-input {
+    display: none;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    .story-phone {
+      border-radius: 0;
+      max-width: 100%;
+      max-height: 100%;
+      box-shadow: none;
+    }
+
+    .story-canvas {
+      padding: 0;
+    }
+
+    .story-text-display {
+      font-size: 1.3rem;
+    }
+
+    .mode-btn {
+      width: 44px;
+      height: 44px;
+    }
+
+    .story-text-input {
+      padding: 12px 16px;
+      font-size: 0.95rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="story-creator">
+  <!-- Top Bar -->
+  <div class="story-top-bar">
+    <button type="button" class="back-btn" onclick="history.back()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </button>
+
+    <div class="user-pill">
+      {% if user.avatar and user.avatar != 'default-avatar.png' %}
+        <img src="{{ url_for('static', filename='images/' + user.avatar) }}" alt="{{ user.username }}">
+      {% else %}
+        <div class="avatar-fallback">{{ user.display_name[0] if user.display_name else user.username[0] }}</div>
+      {% endif %}
+      <span>Votre story</span>
+    </div>
+
+    <div style="width: 40px;"></div>
+  </div>
+
+  <!-- Canvas / Preview -->
+  <div class="story-canvas">
+    <div class="story-phone" id="storyPhone">
+      <!-- Progress bar -->
+      <div class="story-progress">
+        <div class="story-progress-bar"><div class="fill"></div></div>
+      </div>
+
+      <!-- Background pattern -->
+      <div class="story-bg-pattern"></div>
+
+      <!-- Content Area -->
+      <div class="story-content-area" id="storyContentArea">
+        <div class="story-empty-state" id="emptyState">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <p>Tapez votre message ou ajoutez une photo</p>
+        </div>
+
+        <div class="story-text-display" id="textDisplay" style="display: none;"></div>
+        <div class="story-image-display" id="imageDisplay" style="display: none;">
+          <img id="previewImage" src="" alt="">
+        </div>
+        <div class="story-code-display" id="codeDisplay" style="display: none;">
+          <div class="code-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span style="color: #8b949e; font-size: 0.75rem; margin-left: 8px;">story.py</span>
+          </div>
+          <pre><code id="codeContent"></code></pre>
+        </div>
+      </div>
+
+      <!-- Bottom Toolbar -->
+      <div class="story-toolbar">
+        <!-- Color picker (text mode) -->
+        <div class="color-picker" id="colorPicker" style="display: none;">
+          <div class="color-dot active" style="background: #F8FAFC;" data-color="#F8FAFC" onclick="selectColor(this)"></div>
+          <div class="color-dot" style="background: #64FFDA;" data-color="#64FFDA" onclick="selectColor(this)"></div>
+          <div class="color-dot" style="background: #a78bfa;" data-color="#a78bfa" onclick="selectColor(this)"></div>
+          <div class="color-dot" style="background: #FF6B6B;" data-color="#FF6B6B" onclick="selectColor(this)"></div>
+          <div class="color-dot" style="background: #fbbf24;" data-color="#fbbf24" onclick="selectColor(this)"></div>
+          <div class="color-dot" style="background: #34d399;" data-color="#34d399" onclick="selectColor(this)"></div>
+        </div>
+
+        <!-- Background selector -->
+        <div class="bg-selector" id="bgSelector">
+          <div class="bg-option bg-gradient-1 active" onclick="selectBg(this, 'bg-gradient-1')"></div>
+          <div class="bg-option bg-gradient-2" onclick="selectBg(this, 'bg-gradient-2')"></div>
+          <div class="bg-option bg-gradient-3" onclick="selectBg(this, 'bg-gradient-3')"></div>
+          <div class="bg-option bg-gradient-4" onclick="selectBg(this, 'bg-gradient-4')"></div>
+          <div class="bg-option bg-gradient-5" onclick="selectBg(this, 'bg-gradient-5')"></div>
+          <div class="bg-option bg-gradient-6" onclick="selectBg(this, 'bg-gradient-6')"></div>
+        </div>
+
+        <!-- Mode selector -->
+        <div class="mode-selector">
+          <button type="button" class="mode-btn active" data-mode="text" onclick="setMode('text')" title="Texte">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button type="button" class="mode-btn" data-mode="image" onclick="document.getElementById('storyImageInput').click()" title="Image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </button>
+          <button type="button" class="mode-btn" data-mode="code" onclick="setMode('code')" title="Code">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Input -->
+        <form method="POST" action="{{ url_for('main.create_story') }}" enctype="multipart/form-data" id="storyForm" style="margin: 0;">
+          <div class="story-input-area">
+            <input type="text" class="story-text-input" id="storyInput" name="content" placeholder="Écrivez quelque chose..." autocomplete="off">
+            <input type="hidden" name="story_type" id="hiddenType" value="text">
+            <input type="hidden" name="text_color" id="hiddenColor" value="#F8FAFC">
+            <input type="hidden" name="bg_style" id="hiddenBg" value="bg-gradient-1">
+            <input type="file" id="storyImageInput" name="image" class="file-input" accept="image/*" onchange="handleImageUpload(this)">
+            <button type="submit" class="story-send-btn" id="sendBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentMode = 'text';
+  let currentColor = '#F8FAFC';
+  let currentBg = 'bg-gradient-1';
+  let hasImage = false;
+
+  const storyInput = document.getElementById('storyInput');
+  const textDisplay = document.getElementById('textDisplay');
+  const imageDisplay = document.getElementById('imageDisplay');
+  const codeDisplay = document.getElementById('codeDisplay');
+  const emptyState = document.getElementById('emptyState');
+  const colorPicker = document.getElementById('colorPicker');
+  const storyPhone = document.getElementById('storyPhone');
+
+  // ===== MODE SWITCHING =====
+  function setMode(mode) {
+    currentMode = mode;
+
+    // Update buttons
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+
+    // Update hidden input
+    document.getElementById('hiddenType').value = mode;
+
+    // Show/hide color picker
+    colorPicker.style.display = mode === 'text' ? 'flex' : 'none';
+
+    // Update placeholder
+    const placeholders = {
+      text: 'Écrivez quelque chose...',
+      image: 'Ajoutez une légende...',
+      code: 'Collez votre code ici...'
+    };
+    storyInput.placeholder = placeholders[mode] || placeholders.text;
+
+    // Clear and update display
+    updateDisplay();
+  }
+
+  // ===== LIVE PREVIEW =====
+  storyInput.addEventListener('input', function() {
+    updateDisplay();
+  });
+
+  function updateDisplay() {
+    const value = storyInput.value.trim();
+
+    if (!value && !hasImage) {
+      emptyState.style.display = 'block';
+      textDisplay.style.display = 'none';
+      codeDisplay.style.display = 'none';
+      return;
+    }
+
+    emptyState.style.display = 'none';
+
+    if (currentMode === 'text') {
+      textDisplay.style.display = 'block';
+      textDisplay.textContent = value || 'Votre texte apparaîtra ici';
+      textDisplay.style.color = currentColor;
+      codeDisplay.style.display = 'none';
+    } else if (currentMode === 'code') {
+      codeDisplay.style.display = 'block';
+      document.getElementById('codeContent').textContent = value || '# Votre code apparaîtra ici';
+      textDisplay.style.display = 'none';
+    } else if (currentMode === 'image') {
+      textDisplay.style.display = value ? 'block' : 'none';
+      textDisplay.textContent = value;
+      textDisplay.style.color = currentColor;
+      textDisplay.classList.toggle('has-image', hasImage);
+    }
+  }
+
+  // ===== COLOR SELECTION =====
+  function selectColor(dot) {
+    document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+    dot.classList.add('active');
+    currentColor = dot.dataset.color;
+    document.getElementById('hiddenColor').value = currentColor;
+    updateDisplay();
+  }
+
+  // ===== BACKGROUND SELECTION =====
+  function selectBg(el, bgClass) {
+    document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    currentBg = bgClass;
+    document.getElementById('hiddenBg').value = bgClass;
+
+    // Apply gradient to phone
+    const gradients = {
+      'bg-gradient-1': 'linear-gradient(135deg, #0A192F, #112240)',
+      'bg-gradient-2': 'linear-gradient(135deg, #1a1a2e, #16213e)',
+      'bg-gradient-3': 'linear-gradient(135deg, #0f3460, #16213e)',
+      'bg-gradient-4': 'linear-gradient(135deg, #1a1a2e, #0f3460)',
+      'bg-gradient-5': 'linear-gradient(135deg, #16213e, #0A192F)',
+      'bg-gradient-6': 'linear-gradient(135deg, #0d1b2a, #1b263b)'
+    };
+    storyPhone.style.background = gradients[bgClass];
+  }
+
+  // ===== IMAGE UPLOAD =====
+  function handleImageUpload(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('previewImage').src = e.target.result;
+        imageDisplay.style.display = 'block';
+        hasImage = true;
+        setMode('image');
+        emptyState.style.display = 'none';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  // ===== FORM SUBMISSION =====
+  document.getElementById('storyForm').addEventListener('submit', function(e) {
+    const value = storyInput.value.trim();
+    if (!value && !hasImage) {
+      e.preventDefault();
+      storyInput.focus();
+      storyInput.style.borderColor = '#FF6B6B';
+      setTimeout(() => { storyInput.style.borderColor = ''; }, 1000);
+      return false;
+    }
+    // Plus besoin de copier dans hiddenContent
+});
+
+  // ===== ENTER TO SUBMIT =====
+  storyInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      document.getElementById('sendBtn').click();
+    }
+  });
+</script>
+{% endblock %}

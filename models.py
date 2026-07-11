@@ -186,7 +186,12 @@ class User(db.Model):
     # Candidatures
     applications = db.relationship('JobApplication', backref='applicant', lazy='dynamic',
                                     cascade='all, delete-orphan')
-    
+
+    # Stories
+    stories = db.relationship('Story', backref='user', lazy='dynamic',
+                            foreign_keys='Story.user_id', 
+                            cascade='all, delete-orphan')
+        
     # ============================================
     # MÉTHODES
     # ============================================
@@ -638,3 +643,107 @@ class JobApplication(db.Model):
     
     def __repr__(self):
         return f'<JobApplication {self.id}>'
+
+# ============================================
+# STORY (Publication éphémère)
+# ============================================
+class Story(db.Model):
+    __tablename__ = 'story'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Contenu
+    content = db.Column(db.Text, nullable=True)
+
+    # Type de story
+    story_type = db.Column(db.String(50), default='text')
+    # text, image, code, poll
+
+    # Média
+    image_url = db.Column(db.String(500))
+
+    # Style
+    text_color = db.Column(db.String(7), default='#F8FAFC')
+    bg_style = db.Column(db.String(50), default='bg-gradient-1')
+
+    # Poll (JSON)
+    poll_options = db.Column(db.JSON)  # ["Option A", "Option B"]
+    poll_votes = db.Column(db.JSON)    # {"option_1": 5, "option_2": 3}
+
+    # Métriques
+    views_count = db.Column(db.Integer, default=0)
+
+    # Durée de vie (24h par défaut)
+    expires_at = db.Column(db.DateTime, default=lambda: datetime.utcnow() + timedelta(hours=24))
+
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Clé étrangère
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # ============================================
+    # RELATIONS
+    # ============================================
+
+    views = db.relationship('StoryView', backref='story', lazy='dynamic',
+                            cascade='all, delete-orphan')
+
+    # ============================================
+    # PROPERTIES
+    # ============================================
+
+    @property
+    def is_expired(self):
+        """Vérifie si la story a expiré"""
+        return datetime.utcnow() > self.expires_at
+
+    @property
+    def time_remaining(self):
+        """Temps restant avant expiration"""
+        if self.is_expired:
+            return 0
+        return int((self.expires_at - datetime.utcnow()).total_seconds())
+
+    @property
+    def formatted_time_remaining(self):
+        """Temps restant formaté"""
+        seconds = self.time_remaining
+        if seconds <= 0:
+            return "Expirée"
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        if hours > 0:
+            return f"{hours}h {minutes}m"
+        return f"{minutes}m"
+
+    def is_viewed_by(self, user):
+        if not user:
+            return False
+        return StoryView.query.filter_by(story_id=self.id, viewer_id=user.id).first() is not None
+
+    def __repr__(self):
+        return f'<Story {self.id} by user {self.user_id}>'
+
+
+# ============================================
+# STORY VIEW (Qui a vu la story)
+# ============================================
+class StoryView(db.Model):
+    __tablename__ = 'story_view'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Timestamps
+    viewed_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Clés étrangères
+    story_id = db.Column(db.Integer, db.ForeignKey('story.id'), nullable=False)
+    viewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # Relation vers le viewer
+    viewer = db.relationship('User', foreign_keys=[viewer_id])
+
+    def __repr__(self):
+        return f'<StoryView story={self.story_id} viewer={self.viewer_id}>'
+    
