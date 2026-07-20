@@ -123,6 +123,40 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login = db.Column(db.DateTime)
+
+    # --- Présence (messagerie) ---
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def is_online(self):
+        """Considéré en ligne si vu il y a moins de 60 secondes"""
+        if not self.last_seen:
+            return False
+        return (datetime.utcnow() - self.last_seen).total_seconds() < 60
+
+    @property
+    def last_seen_text(self):
+        """Texte affiché sous le nom dans le chat : 'En ligne' ou 'vu à ...'"""
+        if self.is_online:
+            return "En ligne"
+        if not self.last_seen:
+            return "Hors ligne"
+        delta = datetime.utcnow() - self.last_seen
+        seconds = delta.total_seconds()
+        if seconds < 60:
+            return "vu à l'instant"
+        minutes = int(seconds // 60)
+        if minutes < 60:
+            return f"vu il y a {minutes} min"
+        hours = int(minutes // 60)
+        if hours < 24:
+            return f"vu aujourd'hui à {self.last_seen.strftime('%H:%M')}"
+        days = int(hours // 24)
+        if days == 1:
+            return f"vu hier à {self.last_seen.strftime('%H:%M')}"
+        if days < 7:
+            return f"vu il y a {days} j"
+        return f"vu le {self.last_seen.strftime('%d/%m/%Y')}"
     
     # ============================================
     # RELATIONS
@@ -503,9 +537,12 @@ class Message(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     
-    content = db.Column(db.Text, nullable=False)
+    content = db.Column(db.Text, nullable=True)
     message_type = db.Column(db.String(20), default='text')  # text, code, image
     
+    # Image attachée (chat façon WhatsApp)
+    image = db.Column(db.String(500), nullable=True)
+
     # Code attaché
     code_snippet = db.Column(db.Text)
     code_language = db.Column(db.String(50))
@@ -520,7 +557,22 @@ class Message(db.Model):
     # Clés étrangères
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
+
+    @property
+    def display_time(self):
+        return self.created_at.strftime('%H:%M')
+
+    @property
+    def display_day(self):
+        """Étiquette de séparateur de jour façon WhatsApp"""
+        today = datetime.utcnow().date()
+        msg_date = self.created_at.date()
+        if msg_date == today:
+            return "Aujourd'hui"
+        if (today - msg_date).days == 1:
+            return "Hier"
+        return self.created_at.strftime('%d/%m/%Y')
+
     def __repr__(self):
         return f'<Message {self.id}>'
 
@@ -553,7 +605,39 @@ class Notification(db.Model):
     
     # Clé étrangère
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
+
+    # ============================================
+    # RELATIONS
+    # ============================================
+    actor = db.relationship('User', foreign_keys=[actor_id])
+    post = db.relationship('Post', foreign_keys=[post_id])
+    project = db.relationship('Project', foreign_keys=[project_id])
+
+    # ============================================
+    # PROPERTIES
+    # ============================================
+    @property
+    def time_ago(self):
+        """Temps écoulé depuis la création, format court en français"""
+        delta = datetime.utcnow() - self.created_at
+        seconds = delta.total_seconds()
+        if seconds < 60:
+            return "à l'instant"
+        minutes = int(seconds // 60)
+        if minutes < 60:
+            return f"il y a {minutes} min"
+        hours = int(minutes // 60)
+        if hours < 24:
+            return f"il y a {hours} h"
+        days = int(hours // 24)
+        if days < 7:
+            return f"il y a {days} j"
+        weeks = int(days // 7)
+        if weeks < 5:
+            return f"il y a {weeks} sem"
+        months = int(days // 30)
+        return f"il y a {months} mois"
+
     def __repr__(self):
         return f'<Notification {self.notification_type}>'
 
@@ -746,4 +830,3 @@ class StoryView(db.Model):
 
     def __repr__(self):
         return f'<StoryView story={self.story_id} viewer={self.viewer_id}>'
-    

@@ -1,0 +1,616 @@
+{% extends "base.html" %}
+
+{% block title %}{{ other.display_name or other.username }} - Messages{% endblock %}
+
+{% block extra_css %}
+  .chat-page {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 100px);
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 4px;
+    border-bottom: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .chat-back {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #0A192F;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .chat-back:hover {
+    background: rgba(10, 25, 47, 0.05);
+  }
+
+  .chat-back svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .chat-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .chat-avatar-wrap img,
+  .chat-avatar-wrap .avatar-fallback {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .chat-avatar-wrap .avatar-fallback {
+    background: linear-gradient(135deg, #64FFDA, #0A192F);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .chat-avatar-wrap .online-dot {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 2px solid #F8FAFC;
+  }
+
+  .chat-title {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .chat-title .name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0A192F;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chat-title .status {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    margin-top: 1px;
+    transition: color 0.2s ease;
+  }
+
+  .chat-title .status.online {
+    color: #22c55e;
+    font-weight: 600;
+  }
+
+  .chat-title .status.typing {
+    color: #64FFDA;
+    font-weight: 700;
+  }
+
+  /* ===== MESSAGES ===== */
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(100,255,218,0.04), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(10,25,47,0.03), transparent 40%);
+  }
+
+  .day-sep {
+    align-self: center;
+    background: rgba(10, 25, 47, 0.06);
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin: 14px 0;
+  }
+
+  .bubble-row {
+    display: flex;
+    margin-bottom: 4px;
+  }
+
+  .bubble-row.out { justify-content: flex-end; }
+  .bubble-row.in { justify-content: flex-start; }
+
+  .bubble {
+    max-width: 72%;
+    width: fit-content;        /* ← BULLE S'ADAPTE AU TEXTE */
+    padding: 9px 12px 7px;
+    border-radius: 16px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    position: relative;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
+  .bubble.out {
+    background: linear-gradient(135deg, #64FFDA, #4fd8bb);
+    color: #0A192F;
+    border-bottom-right-radius: 4px;
+  }
+
+  .bubble.in {
+    background: #fff;
+    color: #0A192F;
+    border: 1px solid rgba(10, 25, 47, 0.06);
+    border-bottom-left-radius: 4px;
+  }
+
+  .bubble img.chat-image {
+    max-width: 100%;
+    border-radius: 12px;
+    display: block;
+    margin-bottom: 4px;
+    cursor: pointer;
+  }
+
+  .bubble-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    font-size: 0.65rem;
+    color: rgba(10,25,47,0.45);
+    margin-top: 2px;
+  }
+
+  .bubble.in .bubble-meta {
+    color: #94a3b8;
+  }
+
+  .bubble-meta svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .tick-read { color: #3b82f6; }
+
+  /* ===== TYPING INDICATOR ===== */
+  .typing-row {
+    display: none;
+    align-items: center;
+    padding: 6px 12px;
+    margin-bottom: 4px;
+  }
+
+  .typing-row.show { display: flex; }
+
+  .typing-bubble {
+    background: #fff;
+    border: 1px solid rgba(10, 25, 47, 0.06);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    padding: 10px 14px;
+    display: flex;
+    gap: 4px;
+  }
+
+  .typing-bubble span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #8892B0;
+    animation: typingBounce 1.2s infinite ease-in-out;
+  }
+
+  .typing-bubble span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-bubble span:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  /* ===== INPUT BAR ===== */
+  .chat-input-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 4px 4px;
+    border-top: 1px solid rgba(10, 25, 47, 0.06);
+  }
+
+  .chat-attach-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    color: #8892B0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .chat-attach-btn:hover {
+    background: rgba(10, 25, 47, 0.05);
+    color: #0A192F;
+  }
+
+  .chat-attach-btn svg { width: 22px; height: 22px; }
+
+  .chat-textarea-wrap {
+    flex: 1;
+    background: #F1F5F9;
+    border-radius: 22px;
+    padding: 4px 6px;
+  }
+
+  .chat-textarea {
+    width: 100%;
+    max-height: 120px;
+    border: none;
+    outline: none;
+    background: transparent;
+    resize: none;
+    font-family: inherit;
+    font-size: 0.88rem;
+    padding: 8px 10px;
+    color: #0A192F;
+    line-height: 1.4;
+  }
+
+  .chat-send-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #0A192F;
+    color: #64FFDA;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+  }
+
+  .chat-send-btn:hover { transform: scale(1.06); }
+  .chat-send-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+  .chat-send-btn svg { width: 19px; height: 19px; }
+
+  .image-preview-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: #F1F5F9;
+    border-radius: 14px;
+    margin: 0 4px 8px;
+  }
+
+  .image-preview-bar.show { display: flex; }
+
+  .image-preview-bar img {
+    width: 52px;
+    height: 52px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  .image-preview-bar .remove-preview {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #FF6B6B;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 480px) {
+    .chat-page { height: calc(100vh - 90px); }
+    .bubble { max-width: 82%; }
+  }
+{% endblock %}
+
+{% block content %}
+<div class="chat-page">
+  <div class="chat-header">
+    <button class="chat-back" onclick="window.location.href='{{ url_for('main.messages') }}'" aria-label="Retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </button>
+
+    <div class="chat-avatar-wrap">
+      {% if other.avatar and other.avatar != 'default-avatar.png' %}
+        <img src="{{ url_for('static', filename='images/' + other.avatar) }}" alt="{{ other.username }}">
+      {% else %}
+        <div class="avatar-fallback">{{ other.display_name[0] if other.display_name else other.username[0] }}</div>
+      {% endif %}
+      <div class="online-dot" id="onlineDot" style="display: {{ 'block' if other.is_online else 'none' }};"></div>
+    </div>
+
+    <div class="chat-title">
+      <div class="name">{{ other.display_name or other.username }}</div>
+      <div class="status {% if other.is_online %}online{% endif %}" id="statusText">{{ other.last_seen_text }}</div>
+    </div>
+  </div>
+
+  <div class="chat-messages" id="chatMessages">
+    {% set ns = namespace(last_day='') %}
+    {% for msg in messages %}
+      {% if msg.display_day != ns.last_day %}
+        <div class="day-sep">{{ msg.display_day }}</div>
+        {% set ns.last_day = msg.display_day %}
+      {% endif %}
+      {% set is_out = msg.sender_id == user.id %}
+      <div class="bubble-row {{ 'out' if is_out else 'in' }}">
+        <div class="bubble {{ 'out' if is_out else 'in' }}" data-id="{{ msg.id }}">{% if msg.image %}<img class="chat-image" src="{{ url_for('static', filename='images/' + msg.image) }}" alt="" onclick="window.open(this.src, '_blank')">{% endif %}{% if msg.content %}{{ msg.content }}{% endif %}<div class="bubble-meta"><span>{{ msg.display_time }}</span>{% if is_out %}<svg class="read-ticks {{ 'tick-read' if msg.is_read else '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 13 6 18 13 8"/><polyline points="9 13 14 18 21 8"/></svg>{% endif %}</div></div>
+      </div>
+    {% endfor %}
+
+    <div class="typing-row" id="typingRow">
+      <div class="typing-bubble"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <div class="image-preview-bar" id="imagePreviewBar">
+    <img id="imagePreviewImg" src="" alt="">
+    <span style="font-size:0.8rem;color:#64748b;">Image prête à envoyer</span>
+    <button type="button" class="remove-preview" id="removePreviewBtn">Retirer</button>
+  </div>
+
+  <div class="chat-input-bar">
+    <button type="button" class="chat-attach-btn" id="attachBtn" aria-label="Joindre une image">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+    </button>
+    <input type="file" id="imageInput" accept="image/png, image/jpeg, image/gif, image/webp" style="display:none;">
+
+    <div class="chat-textarea-wrap">
+      <textarea class="chat-textarea" id="chatTextarea" rows="1" placeholder="Écrire un message..."></textarea>
+    </div>
+
+    <button type="button" class="chat-send-btn" id="sendBtn" aria-label="Envoyer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const OTHER_USERNAME = {{ other.username|tojson }};
+  const SEND_URL = "{{ url_for('main.send_message', username=other.username) }}";
+  const POLL_URL = "{{ url_for('main.poll_messages', username=other.username) }}";
+  const TYPING_URL = "{{ url_for('main.set_typing', username=other.username) }}";
+
+  let lastId = {{ last_id|default(0) }};
+  let pollTimer = null;
+  let typingTimeout = null;
+  let lastTypingSentAt = 0;
+  let pendingImageFile = null;
+
+  // 🔧 FIX : Tracker les IDs déjà affichés pour éviter les doublons
+  let displayedMessageIds = new Set();
+
+  const messagesEl = document.getElementById('chatMessages');
+
+  // 🔧 FIX : Initialiser le Set avec les messages déjà dans le DOM
+  messagesEl.querySelectorAll('.bubble[data-id]').forEach(bubble => {
+    const id = parseInt(bubble.dataset.id);
+    if (!isNaN(id)) {
+      displayedMessageIds.add(id);
+      if (id > lastId) lastId = id;
+    }
+  });
+  const typingRow = document.getElementById('typingRow');
+  const textarea = document.getElementById('chatTextarea');
+  const sendBtn = document.getElementById('sendBtn');
+  const attachBtn = document.getElementById('attachBtn');
+  const imageInput = document.getElementById('imageInput');
+  const previewBar = document.getElementById('imagePreviewBar');
+  const previewImg = document.getElementById('imagePreviewImg');
+  const removePreviewBtn = document.getElementById('removePreviewBtn');
+  const statusText = document.getElementById('statusText');
+  const onlineDot = document.getElementById('onlineDot');
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+  scrollToBottom();
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function readTicksSvg(isRead) {
+    return `<svg class="read-ticks ${isRead ? 'tick-read' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="1 13 6 18 13 8"/>
+      <polyline points="9 13 14 18 21 8"/>
+    </svg>`;
+  }
+
+  function appendMessage(msg, isOut) {
+    // 🔧 FIX : Éviter d'afficher un message déjà présent
+    if (displayedMessageIds.has(msg.id)) {
+      return;
+    }
+    displayedMessageIds.add(msg.id);
+
+    // Mettre à jour lastId si nécessaire
+    if (msg.id > lastId) {
+      lastId = msg.id;
+    }
+
+    typingRow.classList.remove('show');
+
+    const row = document.createElement('div');
+    row.className = `bubble-row ${isOut ? 'out' : 'in'}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = `bubble ${isOut ? 'out' : 'in'}`;
+    bubble.dataset.id = msg.id;
+
+    let inner = '';
+    if (msg.image_url) {
+      inner += `<img class="chat-image" src="${msg.image_url}" alt="" onclick="window.open('${msg.image_url}', '_blank')">`;
+    }
+    if (msg.content) {
+      inner += escapeHtml(msg.content);
+    }
+    inner += `<div class="bubble-meta"><span>${msg.time}</span>${isOut ? readTicksSvg(msg.is_read) : ''}</div>`;
+    bubble.innerHTML = inner;
+
+    row.appendChild(bubble);
+    messagesEl.insertBefore(row, typingRow);
+    scrollToBottom();
+
+  }
+
+  function updateReadTicks(readIds) {
+    readIds.forEach(id => {
+      const bubble = messagesEl.querySelector(`.bubble.out[data-id="${id}"]`);
+      if (bubble) {
+        const tick = bubble.querySelector('.read-ticks');
+        if (tick) tick.classList.add('tick-read');
+      }
+    });
+  }
+
+  async function sendMessage() {
+    const content = textarea.value.trim();
+    if (!content && !pendingImageFile) return;
+
+    sendBtn.disabled = true;
+    const formData = new FormData();
+    formData.append('content', content);
+    if (pendingImageFile) formData.append('image', pendingImageFile);
+
+    try {
+      const res = await fetch(SEND_URL, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (res.ok) {
+        appendMessage(data, true);
+        textarea.value = '';
+        textarea.style.height = 'auto';
+        clearImagePreview();
+      }
+    } catch (err) {
+      console.error('Erreur envoi message:', err);
+    } finally {
+      sendBtn.disabled = false;
+      textarea.focus();
+    }
+  }
+
+  function clearImagePreview() {
+    pendingImageFile = null;
+    imageInput.value = '';
+    previewBar.classList.remove('show');
+    previewImg.src = '';
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+
+  textarea.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  textarea.addEventListener('input', function () {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+
+    const now = Date.now();
+    if (now - lastTypingSentAt > 2000) {
+      lastTypingSentAt = now;
+      fetch(TYPING_URL, { method: 'POST' }).catch(() => {});
+    }
+  });
+
+  attachBtn.addEventListener('click', () => imageInput.click());
+
+  imageInput.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    pendingImageFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewBar.classList.add('show');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  removePreviewBtn.addEventListener('click', clearImagePreview);
+
+  async function poll() {
+    try {
+      const res = await fetch(`${POLL_URL}?after=${lastId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      data.messages.forEach(msg => {
+        // appendMessage gère le dédoublonnage via displayedMessageIds
+        appendMessage(msg, msg.sender_id === {{ user.id }});
+      });
+
+      updateReadTicks(data.read_ids);
+
+      typingRow.classList.toggle('show', !!data.typing);
+      if (data.typing) scrollToBottom();
+
+      if (data.other_online) {
+        statusText.textContent = 'En ligne';
+        statusText.classList.add('online');
+        onlineDot.style.display = 'block';
+      } else {
+        statusText.textContent = data.other_status;
+        statusText.classList.remove('online');
+        onlineDot.style.display = 'none';
+      }
+    } catch (err) {
+      // silencieux : on retentera au prochain cycle
+    }
+  }
+
+  pollTimer = setInterval(poll, 2500);
+  window.addEventListener('beforeunload', () => clearInterval(pollTimer));
+
+  textarea.focus();
+})();
+</script>
+{% endblock %}

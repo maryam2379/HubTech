@@ -18,6 +18,9 @@ from models import *
 app = Flask(__name__)
 app.config.from_object(Config)
 
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
 # Créer le dossier d'upload
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 

@@ -1105,75 +1105,217 @@ def create_snippet():
 
 
 # ============================================
-# MESSAGERIE
+# MESSAGERIE (style WhatsApp, sondage AJAX)
 # ============================================
+
+# Stockage éphémère en mémoire du statut "en train d'écrire".
+# (clé = (id_expéditeur, id_destinataire) -> datetime du dernier signal)
+# Suffisant pour un seul processus ; à remplacer par Redis en production multi-worker.
+_typing_status = {}
+TYPING_TIMEOUT_SECONDS = 4
+
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+
+def _allowed_image(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+
+
+@main_bp.before_request
+def _touch_last_seen():
+    """Met à jour la présence de l'utilisateur connecté (max une fois toutes les 20s)"""
+    user = get_current_user()
+    if user:
+        now = datetime.utcnow()
+        if not user.last_seen or (now - user.last_seen).total_seconds() > 20:
+            user.last_seen = now
+            db.session.commit()
+
+
 @main_bp.route('/messages')
 @login_required
 def messages():
-    """Liste des conversations"""
+    """Liste des conversations, triée par dernier message (comme WhatsApp)"""
     user = get_current_user()
 
-    # Récupérer les conversations (dernier message par contact)
-    sent = Message.query.filter_by(sender_id=user.id).order_by(Message.created_at.desc()).all()
-    received = Message.query.filter_by(recipient_id=user.id).order_by(Message.created_at.desc()).all()
+    sent = Message.query.filter_by(sender_id=user.id).all()
+    received = Message.query.filter_by(recipient_id=user.id).all()
 
     conversations = {}
-    for msg in sent + received:
+    for msg in sorted(sent + received, key=lambda m: m.created_at, reverse=True):
         other_id = msg.recipient_id if msg.sender_id == user.id else msg.sender_id
         if other_id not in conversations:
-            conversations[other_id] = msg
+            unread_count = Message.query.filter_by(
+                sender_id=other_id, recipient_id=user.id, is_read=False
+            ).count()
+            conversations[other_id] = {
+                'other': User.query.get(other_id),
+                'last_message': msg,
+                'unread_count': unread_count
+            }
 
-    return render_template('messages.html', conversations=conversations.values(), user=user)
+    conversations_list = list(conversations.values())
+    return render_template('messages.html', conversations=conversations_list, user=user)
 
 
 @main_bp.route('/messages/<username>')
 @login_required
 def chat(username):
-    """Conversation avec un utilisateur"""
+    """Fenêtre de conversation avec un utilisateur"""
     user = get_current_user()
     other = User.query.filter_by(username=username).first_or_404()
 
-    # Marquer les messages comme lus
-    Message.query.filter_by(sender_id=other.id, recipient_id=user.id, is_read=False).update({'is_read': True})
+    if other.id == user.id:
+        abort(404)
+
+    Message.query.filter_by(sender_id=other.id, recipient_id=user.id, is_read=False).update(
+        {'is_read': True, 'read_at': datetime.utcnow()}
+    )
     db.session.commit()
 
-    # Récupérer les messages
     msgs = Message.query.filter(
         ((Message.sender_id == user.id) & (Message.recipient_id == other.id)) |
         ((Message.sender_id == other.id) & (Message.recipient_id == user.id))
     ).order_by(Message.created_at.asc()).all()
 
-    return render_template('chat.html', messages=msgs, other=other, user=user)
+    last_id = msgs[-1].id if msgs else 0
+
+    return render_template('chat.html', messages=msgs, other=other, user=user, last_id=last_id)
 
 
 @main_bp.route('/messages/<username>/send', methods=['POST'])
 @login_required
 def send_message(username):
-    """Envoyer un message"""
+    """Envoie un message (texte et/ou image) — répond en JSON pour l'AJAX"""
     user = get_current_user()
     other = User.query.filter_by(username=username).first_or_404()
-    content = request.form.get('content', '').strip()
 
-    if not content:
-        flash('Le message ne peut pas être vide.', 'danger')
-        return redirect(url_for('main.chat', username=username))
+    content = request.form.get('content', '').strip()
+    image_file = request.files.get('image')
+    image_filename = None
+
+    if image_file and image_file.filename:
+        if not _allowed_image(image_file.filename):
+            return jsonify({'error': "Format d'image non supporté."}), 400
+        filename = secure_filename(
+            f"chat_{user.id}_{other.id}_{int(datetime.utcnow().timestamp())}_{image_file.filename}"
+        )
+        image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        image_file.save(image_path)
+        image_filename = filename
+
+    if not content and not image_filename:
+        return jsonify({'error': 'Message vide.'}), 400
 
     msg = Message(
-        content=content,
+        content=content or None,
+        image=image_filename,
+        message_type='image' if image_filename else 'text',
         sender_id=user.id,
         recipient_id=other.id
     )
-
     db.session.add(msg)
+
+    # Évite de spammer les notifications si une conversation est déjà active :
+    # une seule notification "message" non lue à la fois par expéditeur/destinataire.
+    existing_notif = Notification.query.filter_by(
+        notification_type='message', actor_id=user.id, user_id=other.id, is_read=False
+    ).first()
+    if not existing_notif:
+        notif = Notification(
+            user_id=other.id,
+            notification_type='message',
+            title='Nouveau message',
+            message=f'{user.display_name or user.username} vous a envoyé un message.',
+            actor_id=user.id
+        )
+        db.session.add(notif)
+
     db.session.commit()
 
-    return redirect(url_for('main.chat', username=username))
+    # Le signal "en train d'écrire" n'a plus lieu d'être après l'envoi
+    _typing_status.pop((user.id, other.id), None)
+
+    return jsonify({
+        'id': msg.id,
+        'sender_id': msg.sender_id,
+        'content': msg.content,
+        'image_url': url_for('static', filename='images/' + msg.image) if msg.image else None,
+        'message_type': msg.message_type,
+        'time': msg.display_time,
+        'is_read': msg.is_read,
+    })
+
+
+@main_bp.route('/messages/<username>/poll')
+@login_required
+def poll_messages(username):
+    """
+    Sondage AJAX appelé toutes les 2-3s pendant qu'une conversation est ouverte.
+    Renvoie : nouveaux messages, accusés de lecture, statut de frappe et présence.
+    """
+    user = get_current_user()
+    other = User.query.filter_by(username=username).first_or_404()
+
+    after_id = request.args.get('after', 0, type=int)
+
+    new_msgs = Message.query.filter(
+        Message.id > after_id,
+        ((Message.sender_id == user.id) & (Message.recipient_id == other.id)) |
+        ((Message.sender_id == other.id) & (Message.recipient_id == user.id))
+    ).order_by(Message.created_at.asc()).all()
+
+    # Marque comme lus les messages reçus pendant que la fenêtre est ouverte
+    unread_incoming = [m for m in new_msgs if m.sender_id == other.id and not m.is_read]
+    if unread_incoming:
+        for m in unread_incoming:
+            m.is_read = True
+            m.read_at = datetime.utcnow()
+        db.session.commit()
+
+    # IDs de mes messages désormais lus par l'autre (pour les coches bleues)
+    read_ids = [
+        m.id for m in Message.query.filter_by(
+            sender_id=user.id, recipient_id=other.id, is_read=True
+        ).order_by(Message.id.desc()).limit(50).all()
+    ]
+
+    typing_key = (other.id, user.id)
+    is_typing = False
+    if typing_key in _typing_status:
+        is_typing = (datetime.utcnow() - _typing_status[typing_key]).total_seconds() < TYPING_TIMEOUT_SECONDS
+
+    return jsonify({
+        'messages': [{
+            'id': m.id,
+            'sender_id': m.sender_id,
+            'content': m.content,
+            'image_url': url_for('static', filename='images/' + m.image) if m.image else None,
+            'message_type': m.message_type,
+            'time': m.display_time,
+            'is_read': m.is_read,
+        } for m in new_msgs],
+        'read_ids': read_ids,
+        'typing': is_typing,
+        'other_online': other.is_online,
+        'other_status': other.last_seen_text,
+    })
+
+
+@main_bp.route('/messages/<username>/typing', methods=['POST'])
+@login_required
+def set_typing(username):
+    """Signale que l'utilisateur courant est en train d'écrire à 'username'"""
+    user = get_current_user()
+    other = User.query.filter_by(username=username).first_or_404()
+    _typing_status[(user.id, other.id)] = datetime.utcnow()
+    return jsonify({'ok': True})
 
 
 @main_bp.route('/api/messages/unread')
 @login_required
 def api_unread_messages():
-    """Messages non lus"""
+    """Nombre total de messages non lus (badge de la barre de navigation)"""
     user = get_current_user()
     count = Message.query.filter_by(recipient_id=user.id, is_read=False).count()
     return jsonify({'count': count})

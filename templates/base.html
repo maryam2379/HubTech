@@ -382,24 +382,47 @@
         }
 
         {% block extra_css %}{% endblock %}
+
+        /* ===== PJAX LOADING BAR ===== */
+        #pjax-loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: 0%;
+            background: #64FFDA;
+            box-shadow: 0 0 8px rgba(100, 255, 218, 0.6);
+            z-index: 9998;
+            transition: width 0.2s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        #pjax-loading-bar.active {
+            opacity: 1;
+        }
     </style>
-<base target="_blank">
 </head>
 <body>
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div class="flash-container">
-            {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    {% endwith %}
+    <div id="pjax-loading-bar"></div>
 
-    {% block content %}{% endblock %}
+    <div id="pjax-container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+        {% block extra_js %}{% endblock %}
+    </div>
 
     <!-- =========================================================
          BOTTOM NAV — GLASS + THÈME BLANC
@@ -455,6 +478,118 @@
         {% endif %}
     </nav>
 
-    {% block extra_js %}{% endblock %}
+    <!-- =========================================================
+         NAVIGATION AJAX (PJAX) — évite les rechargements de page
+    ========================================================= -->
+    <script>
+    (function () {
+        const container = document.getElementById('pjax-container');
+        const bar = document.getElementById('pjax-loading-bar');
+        let currentController = null;
+
+        function setBar(pct) {
+            bar.classList.add('active');
+            bar.style.width = pct + '%';
+        }
+        function hideBar() {
+            bar.style.width = '100%';
+            setTimeout(() => {
+                bar.classList.remove('active');
+                bar.style.width = '0%';
+            }, 250);
+        }
+
+        // Ré-exécute les <script> injectés via innerHTML (ils ne s'exécutent pas automatiquement)
+        function runScripts(root) {
+            root.querySelectorAll('script').forEach(oldScript => {
+                const newScript = document.createElement('script');
+                for (const attr of oldScript.attributes) {
+                    newScript.setAttribute(attr.name, attr.value);
+                }
+                newScript.textContent = oldScript.textContent;
+                oldScript.replaceWith(newScript);
+            });
+        }
+
+        function updateActiveNav() {
+            const path = location.pathname;
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(link => {
+                if (!link.getAttribute('href')) return;
+                const linkPath = new URL(link.href, location.origin).pathname;
+                link.classList.toggle('active', linkPath === path);
+            });
+        }
+
+        async function loadPage(url, push) {
+            if (currentController) currentController.abort();
+            currentController = new AbortController();
+            setBar(30);
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    signal: currentController.signal
+                });
+                setBar(70);
+
+                if (!res.ok) { window.location.href = url; return; }
+
+                const html = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContainer = doc.getElementById('pjax-container');
+
+                if (!newContainer) {
+                    // Page qui n'utilise pas ce layout (ex: connexion) -> navigation classique
+                    window.location.href = url;
+                    return;
+                }
+
+                container.innerHTML = newContainer.innerHTML;
+                runScripts(container);
+                document.title = doc.title;
+
+                if (push) window.history.pushState({ pjax: true }, '', url);
+
+                updateActiveNav();
+                window.scrollTo(0, 0);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    window.location.href = url;
+                }
+            } finally {
+                hideBar();
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('a[href]');
+            if (!link) return;
+
+            // Laisse le navigateur gérer les cas particuliers
+            if (link.hasAttribute('data-no-pjax')) return;
+            if (link.target && link.target !== '') return;
+            if (link.hasAttribute('download')) return;
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+            let url;
+            try {
+                url = new URL(link.href, location.href);
+            } catch (err) { return; }
+
+            if (url.origin !== location.origin) return;
+            if (url.pathname.startsWith('/static/')) return;
+            if (['mailto:', 'tel:', 'javascript:'].some(p => link.href.startsWith(p))) return;
+            if (url.href === location.href) { e.preventDefault(); return; }
+
+            e.preventDefault();
+            loadPage(url.href, true);
+        });
+
+        window.addEventListener('popstate', function () {
+            loadPage(location.href, false);
+        });
+    })();
+    </script>
 </body>
 </html>

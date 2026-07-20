@@ -3,7 +3,6 @@
 {% block title %}Story - {{ story.user.display_name or story.user.username }}{% endblock %}
 
 {% block extra_css %}
-<style>
   .story-viewer-overlay {
     position: fixed;
     inset: 0;
@@ -163,7 +162,6 @@
     .story-viewer-container { max-width: 100%; height: 100vh; max-height: none; }
     .story-card { margin: 0; border-radius: 0; }
   }
-</style>
 {% endblock %}
 
 {% block content %}

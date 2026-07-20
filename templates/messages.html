@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Messages - HuTech{% endblock %}
+
+{% block extra_css %}
+  .msg-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid rgba(10, 25, 47, 0.08);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin: 20px 0 20px;
+    box-shadow: 0 2px 12px rgba(10, 25, 47, 0.04);
+  }
+
+  .msg-search svg {
+    width: 18px;
+    height: 18px;
+    color: #8892B0;
+    flex-shrink: 0;
+  }
+
+  .msg-search input {
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: #0A192F;
+    width: 100%;
+    background: transparent;
+  }
+
+  .conv-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .conv-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 8px;
+    border-radius: 14px;
+    text-decoration: none;
+    transition: background 0.2s ease;
+    cursor: pointer;
+  }
+
+  .conv-item:hover {
+    background: rgba(10, 25, 47, 0.03);
+  }
+
+  .conv-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .conv-avatar-wrap img,
+  .conv-avatar-wrap .avatar-fallback {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .conv-avatar-wrap .avatar-fallback {
+    background: linear-gradient(135deg, #64FFDA, #0A192F);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .conv-avatar-wrap .online-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 2.5px solid #F8FAFC;
+  }
+
+  .conv-body {
+    flex: 1;
+    min-width: 0;
+    border-bottom: 1px solid rgba(10, 25, 47, 0.05);
+    padding-bottom: 12px;
+  }
+
+  .conv-item:last-child .conv-body {
+    border-bottom: none;
+  }
+
+  .conv-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .conv-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0A192F;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .conv-time {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+
+  .conv-bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3px;
+  }
+
+  .conv-preview {
+    font-size: 0.8rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .conv-preview.unread {
+    color: #0A192F;
+    font-weight: 600;
+  }
+
+  .conv-unread-badge {
+    background: #64FFDA;
+    color: #0A192F;
+    font-size: 0.68rem;
+    font-weight: 800;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  .msg-empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: #94a3b8;
+  }
+
+  .msg-empty svg {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 18px;
+    opacity: 0.3;
+  }
+
+  .msg-empty h3 {
+    font-size: 1.05rem;
+    color: #0A192F;
+    margin-bottom: 6px;
+  }
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="header">
+    <h1>Messages</h1>
+  </div>
+
+  <div class="msg-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="convSearch" placeholder="Rechercher une conversation...">
+  </div>
+
+  {% if conversations %}
+  <div class="conv-list" id="convList">
+    {% for conv in conversations %}
+    {% set other = conv.other %}
+    {% set last = conv.last_message %}
+    <a href="{{ url_for('main.chat', username=other.username) }}" class="conv-item" data-name="{{ (other.display_name or other.username)|lower }}">
+      <div class="conv-avatar-wrap">
+        {% if other.avatar and other.avatar != 'default-avatar.png' %}
+          <img src="{{ url_for('static', filename='images/' + other.avatar) }}" alt="{{ other.username }}">
+        {% else %}
+          <div class="avatar-fallback">{{ other.display_name[0] if other.display_name else other.username[0] }}</div>
+        {% endif %}
+        {% if other.is_online %}<div class="online-dot"></div>{% endif %}
+      </div>
+      <div class="conv-body">
+        <div class="conv-top-row">
+          <span class="conv-name">{{ other.display_name or other.username }}</span>
+          <span class="conv-time">{{ last.display_time }}</span>
+        </div>
+        <div class="conv-bottom-row">
+          <span class="conv-preview {% if conv.unread_count > 0 %}unread{% endif %}">
+            {% if last.sender_id == user.id %}Vous : {% endif -%}
+            {%- if last.message_type == 'image' -%}
+              📷 Photo
+            {%- else -%}
+              {{ last.content }}
+            {%- endif %}
+          </span>
+          {% if conv.unread_count > 0 %}
+          <span class="conv-unread-badge">{{ conv.unread_count }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+    <div class="msg-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <h3>Aucune conversation</h3>
+      <p>Rendez-vous sur un profil pour démarrer une discussion.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const convSearch = document.getElementById('convSearch');
+  if (convSearch) {
+    convSearch.addEventListener('input', function () {
+      const q = this.value.trim().toLowerCase();
+      document.querySelectorAll('#convList .conv-item').forEach(item => {
+        item.style.display = item.dataset.name.includes(q) ? 'flex' : 'none';
+      });
+    });
+  }
+</script>
+{% endblock %}
