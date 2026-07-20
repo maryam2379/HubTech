@@ -517,6 +517,16 @@ def edit_profile():
                 avatar_file.save(avatar_path)
                 user.avatar = filename
 
+    
+        # Gestion de la photo de couverture (banner)
+        if 'banner' in request.files:
+            banner_file = request.files['banner']
+            if banner_file.filename:
+                filename = secure_filename(f"banner_{user.id}_{banner_file.filename}")
+                banner_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                banner_file.save(banner_path)
+                user.banner = filename
+        
         db.session.commit()
         flash('Profil mis à jour avec succès !', 'success')
         return redirect(url_for('main.profile', username=user.username))

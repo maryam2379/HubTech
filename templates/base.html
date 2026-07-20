@@ -545,6 +545,7 @@
                     return;
                 }
 
+                document.head.innerHTML = doc.head.innerHTML;
                 container.innerHTML = newContainer.innerHTML;
                 runScripts(container);
                 document.title = doc.title;
